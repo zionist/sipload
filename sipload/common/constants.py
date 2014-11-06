@@ -99,4 +99,23 @@ SIP_STATUSES = {
     4294967301: "Long code"
 }
 
+SIP_METHODS = [
+    "INVITE",
+    "ACK",
+    "BYE",
+    "CANCEL",
+    "OPTIONS",
+    "REGISTER",
+    "PRACK",
+    "SUBSCRIBE",
+    "NOTIFY",
+    "PUBLISH",
+    "INFO",
+    "REFER",
+    "MESSAGE",
+    "UPDATE"
+]
+
+
+
 

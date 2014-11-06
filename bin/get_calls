@@ -1,20 +1,20 @@
 #!/usr/bin/env python
+
 import logging
-import socket
-import os
 import sys
-import datetime
-from collections import OrderedDict
-from pcapfile import savefile
 from optparse import OptionParser
 import signal
 import dpkt
-from siptest.call import Call
-from twisted.internet import reactor, protocol, task
-from siptest.sip import SipMessage
+from dpkt import hexdump
+from dpkt.tcp import TCP
+from dpkt.udp import UDP
+from sipload.call import Call
+from sipload.common.utils import determine_package_type
+from sipload.package import SipMessage
+from sipload.package import TptfMessage
 
-from siptest.client import ReceiverFactory, SenderFactory
-from siptest.common.constants import SIP_HOST, SIP_PORT, RUNS_COUNT, \
+from sipload.client import ReceiverFactory, SenderFactory
+from sipload.common.constants import SIP_HOST, SIP_PORT, RUNS_COUNT, \
     CALL_DURATION, INTERVAL, WAIT_TIME
 from twisted.internet.error import ReactorNotRunning
 
@@ -67,61 +67,24 @@ if __name__ == '__main__':
         sys.exit(1)
 
     calls = []
-    #if eth.type!=dpkt.ethernet.ETH_TYPE_IP:
     with open(opts.filename) as f:
-        #sf = savefile.load_savefile(f)
-        # print dir(sf)
-        #print dir(sf.header)
         pcap = dpkt.pcap.Reader(f)
         for ts, buf in pcap:
             eth = dpkt.ethernet.Ethernet(buf)
             ip = eth.data
-            if eth.type!=dpkt.ethernet.ETH_TYPE_IP:
+            if eth.type != dpkt.ethernet.ETH_TYPE_IP:
                 continue
-            print "#"
-            print socket.inet_ntoa(ip.src)
-            print socket.inet_ntoa(ip.dst)
-            for c in ip.dst:
-                print hex(ord(c))
-            print "#"
-            #ip = eth.data
-            #print ("1" + "#" * 50)
-            #print ip
-            #msg = SipMessage.parse(data)
-            #print ts
-            #print msg.call_id
-            #print msg.method
-            #print msg.frm
-            #print msg.to
-            # print msg.gen_sip_message
-            #from array import array
-            #a = array("B", ip)
-            #print a
-            #print ("3" + "#" * 50)
-
-            # parse to calls with legs here
-            #if calls.get(msg.call_id):
-            #    call = Call(a_call_id=msg.call_id)
-            #    call.add_to_a_leg(msg)
-            #    calls[msg.call_id] = call
-            #else:
-            #    old_call = calls[msg.call_id]
-            #    old_call.
-            #    calls[msg.call_id] = [msg]
-
-    #for k, v in calls.iteritems():
-    #    print "# call %s" % k
-    #    for msg in v:
-    #        pass
-    #        # print msg.gen_sip_message
-
+            if type(ip.data) != TCP and type(ip.data) != UDP:
+                continue
+            # print hexdump(buf)
+            if ip.data.data:
+                package_type = determine_package_type(ip.data.data)
+                package = package_type.parse(ip.data.data)
+            print package
 
     # catch Ctrl + C
     def signal_handler(signal, frame):
-        try:
-            reactor.stop()
-        except ReactorNotRunning as e:
-            raise e
+        sys.exit(1)
     signal.signal(signal.SIGINT, signal_handler)
 
 

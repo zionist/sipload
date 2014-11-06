@@ -4,8 +4,8 @@ from twisted.internet import reactor, protocol
 from twisted.internet.protocol import DatagramProtocol
 from collections import OrderedDict
 
-from siptest.common.constants import SDP_DATA
-from siptest.sip import SipMessage
+from sipload.common.constants import SDP_DATA
+from sipload.package.sip import SipMessage
 
 
 class RtpClient(DatagramProtocol):

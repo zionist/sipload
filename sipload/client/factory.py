@@ -3,9 +3,9 @@ import uuid
 from twisted.internet import reactor, protocol
 from twisted.internet.error import TCPTimedOutError
 
-from siptest.client.client import TwistedBaseClient, Sender, Receiver, \
+from sipload.client.client import TwistedBaseClient, Sender, Receiver, \
     RtpClient
-from siptest.common.constants import DOMAIN_NAME
+from sipload.common.constants import DOMAIN_NAME
 
 
 class BaseClientFactory(protocol.ReconnectingClientFactory):

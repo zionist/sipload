@@ -11,6 +11,6 @@ setup( name='sipload',
           'twisted',
           'dpkt-fix',
       ],
-    scripts=['bin/sipload'],
+    scripts=['bin/get_calls'],
 
     )

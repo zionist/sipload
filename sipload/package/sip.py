@@ -3,20 +3,20 @@ import logging
 import hashlib
 import uuid
 
-from siptest.common.constants import DOMAIN_NAME, AUTH_HEADER_REGEX, URI, \
+from sipload.common.constants import DOMAIN_NAME, AUTH_HEADER_REGEX, URI, \
     AUTH_HEADER, SIP_STATUSES, GET_METHOD_FROM_CSEQ_REGEX
+from sipload.package.base import BaseMessage
 
 
-class SipMessage:
+class SipMessage(BaseMessage):
     """
     Very simple SIP Message
     """
     def __init__(self, method=None, headers={}, body=None,
                  status=None, is_request=True):
+        super(SipMessage, self).__init__(headers=headers, body=body)
         self.logger = logging.getLogger()
         self.method = method
-        self.headers = headers
-        self.body = body
         self.status = status
         self.is_request = is_request
         self.logger = logging.getLogger()
@@ -30,7 +30,7 @@ class SipMessage:
     def copy(self):
         msg = SipMessage(method=self.method, headers=self.headers,
                          body=self.body, status=self.status,
-                         is_request=self.is_request, to=self.to, frm=self.frm)
+                         is_request=self.is_request)
         return msg
 
     def gen_message(self):
@@ -71,7 +71,7 @@ class SipMessage:
         Create objects from text message. Can be two or more
         messages in one message text
         :param msg: text message
-        :return: List of SipMessage objects
+        :return: SipMessage object
         """
         lines = msg.split("\n")
         status = None
