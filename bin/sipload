@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+import logging
+import socket
+import os
+import sys
+import datetime
+from collections import OrderedDict
+from pcapfile import savefile
+from optparse import OptionParser
+import signal
+import dpkt
+from siptest.call import Call
+from twisted.internet import reactor, protocol, task
+from siptest.sip import SipMessage
+
+from siptest.client import ReceiverFactory, SenderFactory
+from siptest.common.constants import SIP_HOST, SIP_PORT, RUNS_COUNT, \
+    CALL_DURATION, INTERVAL, WAIT_TIME
+from twisted.internet.error import ReactorNotRunning
+
+
+if __name__ == '__main__':
+    usage = "usage: %prog [host:port] -f <pcap file> [options]"
+    optp = OptionParser(usage=usage)
+    # Output verbosity options.
+    optp.add_option('-q', '--quiet', help='set logging to ERROR',
+                    action='store_const', dest='loglevel',
+                    const=logging.ERROR, default=logging.INFO)
+    optp.add_option('-v', '--verbose', help='set logging to DEBUG',
+                    action='store_const', dest='loglevel',
+                    const=5, default=logging.INFO)
+    optp.add_option('-f', '--file',
+                    help='pcap file sip package',
+                    dest='filename')
+    optp.add_option('-r', '--rtp', help='rtp file path', dest='rtp_file',
+                    default=None)
+    opts, args = optp.parse_args()
+
+    host = None
+    port = None
+    if not len(args):
+        host = SIP_HOST
+        port = SIP_PORT
+    elif len(args) == 1:
+        (host, port) = args[0].split(":")
+    if len(args) > 1:
+        print("Please set only one host")
+
+    setattr(opts, "host", host)
+    setattr(opts, "port", port)
+
+    logging.basicConfig(level=opts.loglevel,
+                        format='%(asctime)s %(levelname)-8s %(message)s')
+
+    if not opts.filename:
+        print("Please specify the pcap filename")
+        optp.print_help()
+        sys.exit(1)
+
+    user_file_data = ""
+    try:
+        with open(opts.filename, 'r') as user_file:
+            user_file_data = user_file.readlines()
+    except Exception as e:
+        print("Can't read file %s" % opts.filename)
+        print(e)
+        sys.exit(1)
+
+    calls = []
+    #if eth.type!=dpkt.ethernet.ETH_TYPE_IP:
+    with open(opts.filename) as f:
+        #sf = savefile.load_savefile(f)
+        # print dir(sf)
+        #print dir(sf.header)
+        pcap = dpkt.pcap.Reader(f)
+        for ts, buf in pcap:
+            eth = dpkt.ethernet.Ethernet(buf)
+            ip = eth.data
+            if eth.type!=dpkt.ethernet.ETH_TYPE_IP:
+                continue
+            print "#"
+            print socket.inet_ntoa(ip.src)
+            print socket.inet_ntoa(ip.dst)
+            for c in ip.dst:
+                print hex(ord(c))
+            print "#"
+            #ip = eth.data
+            #print ("1" + "#" * 50)
+            #print ip
+            #msg = SipMessage.parse(data)
+            #print ts
+            #print msg.call_id
+            #print msg.method
+            #print msg.frm
+            #print msg.to
+            # print msg.gen_sip_message
+            #from array import array
+            #a = array("B", ip)
+            #print a
+            #print ("3" + "#" * 50)
+
+            # parse to calls with legs here
+            #if calls.get(msg.call_id):
+            #    call = Call(a_call_id=msg.call_id)
+            #    call.add_to_a_leg(msg)
+            #    calls[msg.call_id] = call
+            #else:
+            #    old_call = calls[msg.call_id]
+            #    old_call.
+            #    calls[msg.call_id] = [msg]
+
+    #for k, v in calls.iteritems():
+    #    print "# call %s" % k
+    #    for msg in v:
+    #        pass
+    #        # print msg.gen_sip_message
+
+
+    # catch Ctrl + C
+    def signal_handler(signal, frame):
+        try:
+            reactor.stop()
+        except ReactorNotRunning as e:
+            raise e
+    signal.signal(signal.SIGINT, signal_handler)
+
+
+
