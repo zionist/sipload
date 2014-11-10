@@ -13,15 +13,15 @@ def distribute_calls_process(call):
             pass
 
 if __name__ == '__main__':
-    usage = "usage: %prog -f <pcap file> [options]"
+    usage = "usage: %prog -f <pcap file> -o outdir[options]"
     optp = OptionParser(usage=usage)
     # Output verbosity options.
     optp.add_option('-q', '--quiet', help='set logging to ERROR',
                     action='store_const', dest='loglevel',
                     const=logging.ERROR, default=logging.INFO)
-    optp.add_option('-v', '--verbose', help='set logging to DEBUG',
-                    action='store_const', dest='loglevel',
-                    const=5, default=logging.INFO)
+    #optp.add_option('-v', '--verbose', help='set logging to DEBUG',
+    #                action='store_const', dest='loglevel',
+    #                const=5, default=logging.INFO)
     optp.add_option('-f', '--file',
                     help='pcap file sip package',
                     dest='filename')

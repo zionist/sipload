@@ -1,25 +1,20 @@
-====== Simple SIP load test tool with RTP and statistic =====
+====== Simple SIP and tptf parse and split to calls tool =====
 
 Requirements:
     python == 2.7
     python-dev
 
 Installation:
-    git clone git@git.teligent.ru:stanislav.krizhanovsky/loadtest.git
-    cd loadtest/siptest
-    python setup.py install
+    cd sipload
+    virtualenv env
+    source env/bin/activate
+    python setup.py install or python setup.py install
 
 Purposes:
-    Simple SIP load test tool. Generate simple statistic for each call leg. 
-
-Notes:
-   Runs separate proccess for each call leg
+    Simple SIP and TPTF parse tool. Saves packages for each call. 
 
 Run:
-    siptest -f list_of_users -r |runs| -d |call_duration_in_seconds|
+    get_calls -f <pcap file> -o outdir
 
 Help:
-    siptest -h
-
-Example run:
-    siptest -f list_of_users100 -r files/g711a.pcap
+    get_calls -h
