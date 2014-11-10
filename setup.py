@@ -8,7 +8,6 @@ setup( name='sipload',
     author_email='slaviann@gmail.com',
     packages=find_packages(),
       install_requires=[
-          'twisted',
           'dpkt-fix',
       ],
     scripts=['bin/get_calls'],
