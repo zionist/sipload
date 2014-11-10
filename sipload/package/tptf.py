@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import logging
 import struct
-from sipload.exceptions import ParseException
+from sipload.exceptions import ParseException, NoFicsDataException
 from sipload.package.base import BaseMessage
 
 __author__ = 'slaviann'
@@ -12,6 +12,7 @@ class TptfFics(object):
         self.name = params["name"]
         self.data = params["data"]
         self.logger = logging.getLogger()
+
 
     def __str__(self):
         return "%s: %s" % (self.params["name"], self.params["data"])
@@ -68,7 +69,9 @@ class TptfMessage(BaseMessage):
         self.ficses = ficses
 
     def __str__(self):
-        result = "TPTF %s " % self.state + "#" * 50 + "\n"
+        result = "\n# TPTF %s %s " % (self.num, self.state) + \
+                 "%s "% self.headers["retfunc"] + " -> %s\n" \
+                                                 % self.headers["tofunc"]
 
         result += "# headers \n"
         for key, value in self.headers.iteritems():
@@ -78,6 +81,13 @@ class TptfMessage(BaseMessage):
         for fics in self.ficses:
             result += str(fics) + ", "
         return result
+
+    def get_fics_value_by_name(self, name):
+        for fics in self.ficses:
+            if name == fics.name:
+                return fics.data
+        return None
+        # raise NoFicsDataException(name, self)
 
     @property
     def state(self):

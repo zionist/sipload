@@ -34,6 +34,7 @@ def parse_packages(filename):
     :param filename:
     :return: Iterator with packages
     """
+    num = 1
     with open(filename) as f:
         pcap = dpkt.pcap.Reader(f)
         for ts, buf in pcap:
@@ -49,7 +50,10 @@ def parse_packages(filename):
                     try:
                         package = package_type.parse(ip.data.data)
                     except ParseException:
+                        num += 1
                         continue
                     package.set_ts(ts)
                     package.set_pcap_package(eth)
+                    package.set_num(num)
+                    num += 1
                     yield package

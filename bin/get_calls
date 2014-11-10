@@ -68,14 +68,12 @@ if __name__ == '__main__':
 
 
     calls = []
-    num = 1
     for package in parse_packages(opts.filename):
         if SaiCall.is_call_start(package):
             call = SaiCall(start_package=package)
-            logging.debug("# call start on  %s" % num)
-            call.add_package(package)
+            logging.debug("# call start on  %s" % package.num)
+            # call.add_package(package)
             calls.append(call)
-            num += 1
             continue
         for call in calls:
             #if package.body:
@@ -84,12 +82,14 @@ if __name__ == '__main__':
             #        print num
             if call.is_call_package(package):
                 call.add_package(package)
+                #if package.num == 98:
+                    #print "# yes"
+                    #print call
 
-        num += 1
 
     #for call in calls:
     #    print call
-    print calls[0]
+    # print calls[3]
 
 
 

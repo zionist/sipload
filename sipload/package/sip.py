@@ -35,12 +35,26 @@ class SipMessage(BaseMessage):
 
     def __str__(self):
         if self.status:
-            result = "SIP Reply on %s " % self.method + \
-                     "with %s" % self.status + "#" * 50 + "\n"
+            result = "\n# SIP Reply %s on %s " % (self.num, self.method) + \
+                     "with %s" % self.status + "\n"
         else:
-            result = "SIP Request %s " % self.method + "#" * 50 + "\n"
+            result = "\n# SIP Request %s %s" % (self.num, self.method) + "\n"
         result += self.gen_message()
         return result
+
+    @property
+    def sdp_session(self):
+        if not self.body:
+            return
+        session = None
+        if "application/sdp" in self.body:
+            data = self.body.split("\n")
+            for line in data:
+                # o=Robert 1174051 1 IN IP4 10.61.245.228
+                if line.startswith("o="):
+                    session = line.split()[1]
+        return session
+
 
     def gen_message(self):
         """
