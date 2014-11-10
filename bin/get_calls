@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from collections import OrderedDict
 
 import logging
 import struct
@@ -19,7 +20,6 @@ from sipload.package import TptfMessage
 from sipload.client import ReceiverFactory, SenderFactory
 from sipload.common.constants import SIP_HOST, SIP_PORT, RUNS_COUNT, \
     CALL_DURATION, INTERVAL, WAIT_TIME
-from sipload.saicall import sai_get_call_start
 from twisted.internet.error import ReactorNotRunning
 
 def distribute_calls_process(call):
@@ -66,18 +66,48 @@ if __name__ == '__main__':
             # out_file.writepkt(buf, ts)
     # out_file.close()
 
-    calls = [SaiCall(c) for c in filter(sai_get_call_start,
-                                     parse_packages(opts.filename) )]
 
-    procs = []
-    for call in calls:
-        p = Process(target=distribute_calls_process, args=(call, ))
-        procs.append(p)
+    calls = []
+    num = 1
+    for package in parse_packages(opts.filename):
+        if SaiCall.is_call_start(package):
+            call = SaiCall(start_package=package)
+            logging.debug("# call start on  %s" % num)
+            call.add_package(package)
+            calls.append(call)
+            num += 1
+            continue
+        for call in calls:
+            #if package.body:
+            #    if "1799935" in package.body:
+            #        print calls
+            #        print num
+            if call.is_call_package(package):
+                call.add_package(package)
 
-    for p in procs:
-        p.start()
-    for p in procs:
-        p.join()
+        num += 1
+
+    #for call in calls:
+    #    print call
+    print calls[0]
+
+
+
+    #calls = [SaiCall(c) for c in filter(sai_get_call_start,
+    #                                 parse_packages(opts.filename))]
+    #
+    #print(calls)
+
+
+    #procs = []
+    # for call in calls:
+    #     p = Process(target=distribute_calls_process, args=(call, ))
+    #     procs.append(p)
+
+    #for p in procs:
+    #    p.start()
+    #for p in procs:
+    #    p.join()
 
     # find all packages related ro calls
     #for call in calls:
