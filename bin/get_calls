@@ -1,26 +1,11 @@
 #!/usr/bin/env python
-from collections import OrderedDict
 
 import logging
-import struct
 import sys
 from optparse import OptionParser
-import signal
-import dpkt
-from dpkt import hexdump
-from multiprocessing import Process
-from dpkt.tcp import TCP
-from dpkt.udp import UDP
-from dpkt.pcap import Writer
+import os
 from sipload.saicall import SaiCall
-from sipload.common.utils import determine_package_type, parse_packages
-from sipload.package import SipMessage
-from sipload.package import TptfMessage
-
-from sipload.client import ReceiverFactory, SenderFactory
-from sipload.common.constants import SIP_HOST, SIP_PORT, RUNS_COUNT, \
-    CALL_DURATION, INTERVAL, WAIT_TIME
-from twisted.internet.error import ReactorNotRunning
+from sipload.common.utils import parse_packages
 
 def distribute_calls_process(call):
     for package in parse_packages(opts.filename):
@@ -40,6 +25,9 @@ if __name__ == '__main__':
     optp.add_option('-f', '--file',
                     help='pcap file sip package',
                     dest='filename')
+    optp.add_option('-o', '--outdir',
+                    help='outdir for pcap file sae',
+                    dest='outdir')
     opts, args = optp.parse_args()
 
     logging.basicConfig(level=opts.loglevel,
@@ -47,6 +35,11 @@ if __name__ == '__main__':
 
     if not opts.filename:
         print("Please specify the pcap filename")
+        optp.print_help()
+        sys.exit(1)
+
+    if not opts.outdir or not os.path.isdir(opts.outdir):
+        print("Please specify the outdir directory")
         optp.print_help()
         sys.exit(1)
 
@@ -59,75 +52,15 @@ if __name__ == '__main__':
         print(e)
         sys.exit(1)
 
-    # out_file = Writer(open("/tmp/test.pcap", 'wb'))
-            # packages.append(package)
-
-            # test write file
-            # out_file.writepkt(buf, ts)
-    # out_file.close()
-
-
     calls = []
     for package in parse_packages(opts.filename):
         if SaiCall.is_call_start(package):
-            call = SaiCall(start_package=package)
-            logging.debug("# call start on  %s" % package.num)
-            # call.add_package(package)
+            call = SaiCall(opts=opts, start_package=package)
             calls.append(call)
             continue
         for call in calls:
-            #if package.body:
-            #    if "1799935" in package.body:
-            #        print calls
-            #        print num
             if call.is_call_package(package):
                 call.add_package(package)
-                #if package.num == 98:
-                    #print "# yes"
-                    #print call
 
-
-    #for call in calls:
-    #    print call
-    # print calls[3]
-
-
-
-    #calls = [SaiCall(c) for c in filter(sai_get_call_start,
-    #                                 parse_packages(opts.filename))]
-    #
-    #print(calls)
-
-
-    #procs = []
-    # for call in calls:
-    #     p = Process(target=distribute_calls_process, args=(call, ))
-    #     procs.append(p)
-
-    #for p in procs:
-    #    p.start()
-    #for p in procs:
-    #    p.join()
-
-    # find all packages related ro calls
-    #for call in calls:
-    #    for package in parse_packages(opts.filename):
-    #        if call.sai_package_related_to_call(package):
-    #            pass
-    #print result.get()
-    #pool.terminate()
-
-    #for p in calls_starts:
-    #    print (p)
-
-    # find all call_starts
-
-    # find call start
-
-    # catch Ctrl + C
-    #def signal_handler(signal, frame):
-    #    sys.exit(1)
-    #signal.signal(signal.SIGINT, signal_handler)
-
-
-
+    for call in calls:
+        call.save_pcap()

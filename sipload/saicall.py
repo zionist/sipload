@@ -1,5 +1,7 @@
 from collections import OrderedDict
 import hashlib
+import os
+from dpkt.pcap import Writer
 from sipload.package import SipMessage
 from sipload.package import TptfMessage
 
@@ -8,13 +10,14 @@ __author__ = 'slaviann'
 
 
 class SaiCall:
-    def __init__(self, start_package):
+    def __init__(self, opts, start_package):
         """
         Main call class. Must be separate class for each call logic
         :param start_package:
         :return:
         """
         self.packages = []
+        self.opts = opts
         self.add_package(start_package)
         # get SDP session value from ELI CRED transaction
         self.sdp_session = start_package.get_fics_value_by_name("SDPOSID")
@@ -23,7 +26,6 @@ class SaiCall:
         self.eli_instance = start_package.headers["retfunc"][4:]
         self.first_trans_num = start_package.headers["transnumb"]
         self.start_num = start_package.num
-        # self.hash = hashlib.sha512()
 
     def __str__(self):
         out = "### SAI Call start no #%s \n" % self.start_num
@@ -60,13 +62,19 @@ class SaiCall:
         raise NotImplemented
 
     def save_pcap(self):
-        raise NotImplemented
+        """
+        Saves pcap file for given call
+        pcap file name is first call pcap frame number
+        """
+        file_name = "%s.pcap" % self.start_num
+        full_name = os.path.join(self.opts.outdir, file_name)
+        out_file = Writer(open(full_name, 'wb'))
+        for package in self.packages:
+            out_file.writepkt(package.pcap_package, package.ts)
+        out_file.close()
 
-    @property
-    def hash(self):
-        return self.hash.hexdigest()
 
-    def is_first_reply(self, package):
+    def _is_first_reply(self, package):
         """
         Check is transaction is first reply against SAI CRED transaction
         Get SAI generated session ID
@@ -85,7 +93,7 @@ class SaiCall:
                                 return True
         return False
 
-    def is_first_invite(self, package):
+    def _is_first_invite(self, package):
         """
         Check is package is SipMessage and is first INVITE with sdp
         and sdp session from first reply against CRED
@@ -125,12 +133,9 @@ class SaiCall:
         :return: True if related
         """
         # get session
-        if self.is_first_reply(package):
+        if self._is_first_reply(package):
             return True
         # get sip_call_id
-        if self.is_first_invite(package):
+        if self._is_first_invite(package):
             return True
         return self._is_call_package(package)
-
-
-
