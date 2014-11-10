@@ -13,6 +13,9 @@ Installation:
 Purposes:
     Simple SIP and TPTF parse tool. Saves packages for each call. 
 
+Prepare:
+    Pcap file must have layer 2 ethernet, SIP, SAI related TPTF
+
 Run:
     get_calls -f <pcap file> -o outdir
 
