@@ -33,6 +33,15 @@ class SipMessage(BaseMessage):
                          is_request=self.is_request)
         return msg
 
+    def __str__(self):
+        if self.status:
+            result = "SIP Reply on %s " % self.method + \
+                     "with %s" % self.status + "#" * 50 + "\n"
+        else:
+            result = "SIP Request %s " % self.method + "#" * 50 + "\n"
+        result += self.gen_message()
+        return result
+
     def gen_message(self):
         """
         Generate text SIP message

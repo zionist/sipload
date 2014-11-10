@@ -1,13 +1,16 @@
 from collections import OrderedDict
 import logging
 import struct
+from sipload.exceptions import ParseException
 from sipload.package.base import BaseMessage
 
 __author__ = 'slaviann'
 
-class TptfFics:
+class TptfFics(object):
     def __init__(self, params={}):
         self.params = params
+        self.name = params["name"]
+        self.data = params["data"]
         self.logger = logging.getLogger()
 
     def __str__(self):
@@ -43,8 +46,8 @@ class TptfFics:
                     name.append(c)
             params["name"] = "".join(name)
         except struct.error as e:
-            logging.error("TPTF parse fics error")
-            logging.error("Data for parse was: #%s#" % body)
+            logging.warning("TPTF parse fics error")
+            logging.warning("Data for parse was: #%s#" % body)
             raise e
         return TptfFics(params=params)
 
@@ -65,10 +68,7 @@ class TptfMessage(BaseMessage):
         self.ficses = ficses
 
     def __str__(self):
-        if self.is_reply:
-            result = "TPTF Reply " + "#" * 50 + "\n"
-        else:
-            result = "TPTF New " + "#" * 50 + "\n"
+        result = "TPTF %s " % self.state + "#" * 50 + "\n"
 
         result += "# headers \n"
         for key, value in self.headers.iteritems():
@@ -80,11 +80,13 @@ class TptfMessage(BaseMessage):
         return result
 
     @property
-    def is_reply(self):
+    def state(self):
         if self.headers["flags"] == 2048:
-            return True
-        else:
-            return False
+            return "Reply"
+        elif self.headers["flags"] == -32768:
+            return "Ack"
+        elif self.headers["flags"] == 0:
+            return "New"
 
     @classmethod
     def parse(cls, msg):
@@ -137,8 +139,8 @@ class TptfMessage(BaseMessage):
 
             return TptfMessage(headers=headers, ficses=ficses)
         except struct.error as e:
-            logging.error("TPTF parse header error")
-            logging.error("Data for parse was: #%s#" % msg)
-            raise e
+            logging.warning("TPTF parse header error")
+            logging.warning("Data for parse was: #%s#" % msg)
+            raise ParseException("Can't parse TPTF data")
 
 
