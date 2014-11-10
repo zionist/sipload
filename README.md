@@ -17,7 +17,7 @@ Simple SIP and TPTF parse tool. Saves packages for each call.
 Pcap file must have layer 2 ethernet, SIP, SAI related TPTF
 
 # Run:
-get_calls -f <pcap file> -o outdir
+get_calls -f pcap_file -o outdir
 
 # Help:
 get_calls -h
