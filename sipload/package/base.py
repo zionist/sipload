@@ -27,3 +27,4 @@ class BaseMessage(object):
     def set_pcap_package(self, pcap_package):
         self.pcap_package = pcap_package
 
+

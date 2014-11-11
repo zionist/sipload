@@ -42,11 +42,11 @@ class SaiCall:
         :return: True if package is call start
         """
         if type(package) == TptfMessage and package.state == "New":
-            if package.headers["retfunc"].startswith("ELI"):
-                if package.headers["tofunc"].startswith("SAI"):
-                    if package.headers["tofunc"].endswith("CRED"):
-                        if "SESSION" not in [fics.name for fics in package.ficses]:
-                            return True
+            #if package.headers["retfunc"].startswith("ELI"):
+            if package.headers["tofunc"].startswith("SAI"):
+                if package.headers["tofunc"].endswith("CRED"):
+                    if "SESSION" not in [fics.name for fics in package.ficses]:
+                        return True
 
                             #if package.headers["retfunc"].startswith("SAI"):
                             #    if package.headers["tofunc"].startswith("ASM"):
@@ -139,3 +139,32 @@ class SaiCall:
         if self._is_first_invite(package):
             return True
         return self._is_call_package(package)
+
+    def remove_duplicates(self):
+        """
+        Remove duplicate packages from call
+        :param calls: list of SaiCall objects
+        """
+        def is_not_duplicate(package):
+            # remove all transaction with trans num == 0
+            if type(package) == TptfMessage:
+                if package.headers["transnumb"] == 0:
+                    return False
+                for pack in self.packages:
+                    if type(pack) == TptfMessage:
+                        if package.num == pack.num:
+                            return True
+                        if package.headers["transnumb"] == pack.headers["transnumb"]:
+                            if package.headers["tofunc"] == pack.headers["tofunc"]:
+                                if package.headers["retfunc"] == pack.headers["retfunc"]:
+                                    if package.headers["flags"] == pack.headers["flags"]:
+                                        return False
+            return True
+        self.packages = filter(is_not_duplicate, self.packages)
+
+
+
+
+
+
+

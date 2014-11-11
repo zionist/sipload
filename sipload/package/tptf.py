@@ -127,7 +127,7 @@ class TptfMessage(BaseMessage):
         ]
 
         try:
-        # headers = OrderedDict()
+            # headers = OrderedDict()
             headers = {}
             header_str = msg[:64]
             for frm in header_format:
