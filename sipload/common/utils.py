@@ -37,25 +37,24 @@ def parse_packages(filename):
     num = 1
     with open(filename) as f:
         pcap = dpkt.pcap.Reader(f)
-        for ts, buf in pcap:
-            eth = dpkt.ethernet.Ethernet(buf)
-            ip = eth.data
-            if eth.type != dpkt.ethernet.ETH_TYPE_IP:
-                continue
-            if type(ip.data) != TCP and type(ip.data) != UDP:
-                continue
-            if ip.data.data:
-                package_type = determine_package_type(ip.data.data)
-                if package_type:
-                    try:
-                        package = package_type.parse(ip.data.data)
-                    except ParseException:
+        if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
+            for ts, buf in pcap:
+                sll = dpkt.sll.SLL(buf)
+                ip = sll.data
+                if type(ip.data) != TCP and type(ip.data) != UDP:
+                    continue
+                if ip.data.data:
+                    package_type = determine_package_type(ip.data.data)
+                    if package_type:
+                        try:
+                            package = package_type.parse(ip.data.data)
+                        except ParseException:
+                            num += 1
+                            continue
+                        package.set_ts(ts)
+                        package.set_pcap_package(sll)
+                        package.set_num(num)
                         num += 1
-                        continue
-                    package.set_ts(ts)
-                    package.set_pcap_package(eth)
-                    package.set_num(num)
-                    num += 1
-                    yield package
+                        yield package
 
 

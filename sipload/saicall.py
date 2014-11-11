@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import hashlib
 import os
-from dpkt.pcap import Writer
+from dpkt.pcap import Writer, DLT_LINUX_SLL
 from sipload.package import SipMessage
 from sipload.package import TptfMessage
 
@@ -69,7 +69,7 @@ class SaiCall:
         """
         file_name = "%s.pcap" % self.start_num
         full_name = os.path.join(self.opts.outdir, file_name)
-        out_file = Writer(open(full_name, 'wb'))
+        out_file = Writer(open(full_name, 'wb'), linktype=DLT_LINUX_SLL)
         for package in self.packages:
             out_file.writepkt(package.pcap_package, package.ts)
         out_file.close()
@@ -164,11 +164,34 @@ class SaiCall:
 
 
     def compare(self, other):
+        def is_tptf(package):
+            if type(package) == TptfMessage:
+                return True
+            return False
+        def is_sip(package):
+            if type(package) == SipMessage:
+                return True
+            return False
+
         if len(self.packages) != len(other.packages):
             return False
-        for idx in range(len(self.packages)):
-            if not self.packages[idx].compare(other.packages[idx]):
+
+        tptf_packages = filter(is_tptf, self.packages)
+        other_tptf_packages = filter(is_tptf, other.packages)
+        if len(tptf_packages) != len(other_tptf_packages):
+            return False
+        for idx in range(len(tptf_packages)):
+            if not tptf_packages[idx].compare(other_tptf_packages[idx]):
                 return False
+
+        sip_packages = filter(is_sip, self.packages)
+        other_sip_packages = filter(is_sip, other.packages)
+        if len(sip_packages) != len(other_sip_packages):
+            return False
+        for idx in range(len(sip_packages)):
+            if not sip_packages[idx].compare(other_sip_packages[idx]):
+                return False
+
         return True
 
 
