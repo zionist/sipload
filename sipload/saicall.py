@@ -16,6 +16,7 @@ class SaiCall:
         :param start_package:
         :return:
         """
+        self.asm_exec_start = None
         self.packages = []
         self.opts = opts
         self.add_package(start_package)
@@ -140,10 +141,9 @@ class SaiCall:
             return True
         return self._is_call_package(package)
 
-    def remove_duplicates(self):
+    def remove_duplicate_packages(self):
         """
         Remove duplicate packages from call
-        :param calls: list of SaiCall objects
         """
         def is_not_duplicate(package):
             # remove all transaction with trans num == 0
@@ -161,6 +161,38 @@ class SaiCall:
                                         return False
             return True
         self.packages = filter(is_not_duplicate, self.packages)
+
+
+    def compare(self, other):
+        if len(self.packages) != len(other.packages):
+            return False
+        for idx in range(len(self.packages)):
+            if not self.packages[idx].compare(other.packages[idx]):
+                return False
+        return True
+
+
+    def remove_duplicate_calls(self, calls):
+        """
+        Remove all duplicate calls
+        :param calls: list of SaiCall objects
+        """
+        def get_duplicates(call):
+            if call.start_num == self.start_num:
+                return False
+            return self.compare(call)
+        calls_for_remove = filter(get_duplicates, calls)
+        for call_for_remove in calls_for_remove:
+            if call_for_remove in calls:
+                calls.remove(call_for_remove)
+
+
+
+
+
+
+
+
 
 
 

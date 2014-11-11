@@ -89,6 +89,24 @@ class TptfMessage(BaseMessage):
         return None
         # raise NoFicsDataException(name, self)
 
+    def compare(self, other):
+        """
+        Compare packages.
+        """
+        if type(self) != type(other):
+            return False
+        if not self.headers["tofunc"] == other.headers["tofunc"]:
+            return False
+        if not self.headers["retfunc"][:3] == other.headers["retfunc"][:3]:
+            return False
+        if not self.headers["flags"] == other.headers["flags"]:
+            return False
+        if not self.headers["cc"] == other.headers["cc"]:
+            return False
+        if not self.headers["rsn"] == other.headers["rsn"]:
+            return False
+        return True
+
     @property
     def state(self):
         if self.headers["flags"] == 2048:
@@ -97,6 +115,8 @@ class TptfMessage(BaseMessage):
             return "Ack"
         elif self.headers["flags"] == 0:
             return "New"
+
+
 
     @classmethod
     def parse(cls, msg):

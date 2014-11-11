@@ -18,6 +18,9 @@ class BaseMessage(object):
     def gen_message(cls):
         raise NotImplemented
 
+    def compare(self, other):
+        raise NotImplemented
+
     def set_ts(self, ts):
         self.ts = ts
 

@@ -143,3 +143,18 @@ class SipMessage(BaseMessage):
         return SipMessage(headers=headers, status=status,
                           is_request=is_request, method=method,
                           body=body)
+
+    def compare(self, other):
+        """
+        Compare packages.
+        """
+        if type(self) != type(other):
+            return False
+        if not self.method == other.method:
+            return False
+        if not self.status == other.status:
+            return False
+        if not self.is_request == other.is_request:
+            return False
+        return True
+
