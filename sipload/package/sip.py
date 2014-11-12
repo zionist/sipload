@@ -13,13 +13,14 @@ class SipMessage(BaseMessage):
     Very simple SIP Message
     """
     def __init__(self, method=None, headers={}, body=None,
-                 status=None, is_request=True):
+                 status=None, is_request=True, request_line=None):
         super(SipMessage, self).__init__(headers=headers, body=body)
         self.logger = logging.getLogger()
         self.method = method
         self.status = status
         self.is_request = is_request
         self.logger = logging.getLogger()
+        self.request_line = request_line
 
         # parse headers
         self.to = self.headers.get("To")[0].split(";")[0].\
@@ -100,14 +101,16 @@ class SipMessage(BaseMessage):
         status = None
         is_request = None
         method = None
+        request_line = None
         if lines[0].startswith("SIP/2.0"):
             is_request = False
             # this is answer
             status = int(lines[0].split()[1])
+            request_line = lines[0]
         elif lines[0].endswith("SIP/2.0\r"):
             is_request = True
             method = lines[0].split()[0]
-            to = lines[0].split()[1].split(":")[1]
+            request_line = lines[0]
         lines = lines[1:]
         headers = OrderedDict()
 
@@ -142,7 +145,7 @@ class SipMessage(BaseMessage):
             body = "\n".join(body)
         return SipMessage(headers=headers, status=status,
                           is_request=is_request, method=method,
-                          body=body)
+                          body=body, request_line=request_line)
 
     def compare(self, other):
         """

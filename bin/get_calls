@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+import ConfigParser
 
 import logging
 import sys
 from optparse import OptionParser
 import os
-from sipload.saicall import SaiCall
+from sipload.saicall import CredSaiCall, InviteSaiCall
 from sipload.common.utils import parse_packages
 
 def distribute_calls_process(call):
@@ -25,8 +26,11 @@ if __name__ == '__main__':
     optp.add_option('-f', '--file',
                     help='pcap file sip package',
                     dest='filename')
+    optp.add_option('-c', '--conf',
+                    help='conf file',
+                    dest='conf_file', default="conf.cfg")
     optp.add_option('-o', '--outdir',
-                    help='outdir for pcap file sae',
+                    help='outdir for pcap files',
                     dest='outdir')
     opts, args = optp.parse_args()
 
@@ -35,6 +39,11 @@ if __name__ == '__main__':
 
     if not opts.filename:
         print("Please specify the pcap filename")
+        optp.print_help()
+        sys.exit(1)
+
+    if not os.path.isfile(opts.conf_file):
+        print("Please specify the conf filename")
         optp.print_help()
         sys.exit(1)
 
@@ -52,12 +61,22 @@ if __name__ == '__main__':
         print(e)
         sys.exit(1)
 
+    config = ConfigParser.ConfigParser()
+    config.readfp(open(opts.conf_file))
+    # dark magic
+    setattr(opts, "config", config)
+
     calls = []
     for package in parse_packages(opts.filename):
-        if SaiCall.is_call_start(package):
-            call = SaiCall(opts=opts, start_package=package)
+        if CredSaiCall.is_call_start(opts, package):
+            call = CredSaiCall(opts=opts, start_package=package)
             calls.append(call)
             continue
+        if InviteSaiCall.is_call_start(opts, package):
+            call = InviteSaiCall(opts=opts, start_package=package)
+            calls.append(call)
+            continue
+
         for call in calls:
             if call.is_call_package(package):
                 call.add_package(package)
@@ -71,7 +90,7 @@ if __name__ == '__main__':
     for call in calls:
         call.save_pcap()
 
-    print len(calls)
+    print "Total calls count is %s" % len(calls)
         # call.save_pcap()
 
 

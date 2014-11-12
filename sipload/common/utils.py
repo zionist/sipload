@@ -5,7 +5,7 @@ from dpkt.tcp import TCP
 from dpkt.udp import UDP
 from dpkt.pcap import Writer
 from sipload.common.constants import SIP_METHODS
-from sipload.exceptions import ParseException
+from sipload.exceptions import ParseException, WrongFileFormatException
 from sipload.package import SipMessage, TptfMessage
 from sipload.package import SipMessage
 from sipload.package import TptfMessage
@@ -34,27 +34,28 @@ def parse_packages(filename):
     :param filename:
     :return: Iterator with packages
     """
-    num = 1
+    num = 0
     with open(filename) as f:
         pcap = dpkt.pcap.Reader(f)
         if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
             for ts, buf in pcap:
+                num += 1
                 sll = dpkt.sll.SLL(buf)
                 ip = sll.data
-                if type(ip.data) != TCP and type(ip.data) != UDP:
-                    continue
+                #if type(ip.data) != TCP and type(ip.data) != UDP:
+                #    continue
                 if ip.data.data:
                     package_type = determine_package_type(ip.data.data)
                     if package_type:
                         try:
                             package = package_type.parse(ip.data.data)
                         except ParseException:
-                            num += 1
                             continue
                         package.set_ts(ts)
                         package.set_pcap_package(sll)
                         package.set_num(num)
-                        num += 1
                         yield package
+        else:
+            raise WrongFileFormatException(filename)
 
 
