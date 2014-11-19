@@ -114,8 +114,8 @@ if __name__ == '__main__':
     for call in calls:
         call.remove_duplicate_packages()
 
-    for call in calls:
-        call.remove_duplicate_calls(calls)
+#    for call in calls:
+#        call.remove_duplicate_calls(calls)
 
     for call in calls:
         #if call.start_num == 68:

@@ -46,8 +46,6 @@ class BaseScenario(object):
         Remove duplicate packages from call
         """
         def is_not_duplicate(package):
-            if package.pcap_num == 38:
-                pass
             # remove all transaction with trans num == 0
             if type(package) == TptfMessage:
                 if package.headers["transnumb"] == 0 \
@@ -64,6 +62,16 @@ class BaseScenario(object):
                                         return False
             return True
         self.packages = filter(is_not_duplicate, self.packages)
+        # remove duplicates with same num
+        new_packages_nums = []
+        new_packages = []
+        for package in self.packages:
+            if package.state == "Ack":
+                continue
+            if package.num not in new_packages_nums:
+                new_packages.append(package)
+                new_packages_nums.append(package.num)
+        self.packages = new_packages
 
     def compare(self, other):
         def is_tptf(package):

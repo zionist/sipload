@@ -21,10 +21,11 @@ class InviteEliScenario(BaseScenario):
         :return: True if package is call start
         """
         if type(package) == TptfMessage:
-            if package.headers["tofunc"].startswith("ELI") and \
-                    package.headers["tofunc"].endswith("INBC"):
-                if package.state == "New":
-                    return True
+            if package.headers["transnumb"] == 0:
+                if package.headers["tofunc"].startswith("ELI") and \
+                        package.headers["tofunc"].endswith("INBC"):
+                    if package.state == "New":
+                        return True
         return False
 
     def _is_first_exec(self, package):
@@ -39,11 +40,12 @@ class InviteEliScenario(BaseScenario):
         if type(package) == TptfMessage:
             if package.headers["tofunc"].startswith("ASM") and \
                     package.headers["tofunc"].endswith("EXEC"):
-                if self.sip_call_id == package.get_fics_value_by_name("CALL_ID"):
-                    self.sipsessid = package.get_fics_value_by_name("SIPSESSID")
-                    self.li_sessid = package.get_fics_value_by_name("LI_SESSID")
-                    self.session = package.get_fics_value_by_name("SESSION")
-                    return True
+                if package.headers["retfunc"].startswith("ELI"):
+                    if self.sip_call_id == package.get_fics_value_by_name("CALL_ID"):
+                        self.sipsessid = package.get_fics_value_by_name("SIPSESSID")
+                        self.li_sessid = package.get_fics_value_by_name("LI_SESSID")
+                        self.session = package.get_fics_value_by_name("SESSION")
+                        return True
         return False
 
     def _is_call_package(self, package):
@@ -52,14 +54,14 @@ class InviteEliScenario(BaseScenario):
         :param package: - TptfMessage or SipMessage
         :return: True if related
         """
-        if package.pcap_num == 254 or package.pcap_num == 244:
-            pass
         if self.sip_call_id and self.sip_call_id == package.get_fics_value_by_name("CALL_ID"):
             return True
         if self.sipsessid:
             if self.sipsessid == package.get_fics_value_by_name("SIPSESSID"):
                 return True
             if package.get_fics_value_by_name("SESSION"):
+                if package.get_fics_value_by_name("SESSION") == self.session:
+                    return True
                 if package.headers["tofunc"].startswith("SAI"):
                     if len(self.sipsessid.split("/")) == 2:
                         if package.get_fics_value_by_name("SESSION") == self.sipsessid.split("/")[0]:
@@ -95,3 +97,13 @@ class InviteEliScenario(BaseScenario):
                 if package.headers["retfunc"][-4:] == instance:
                     return True
         return False
+
+    def remove_duplicate_packages(self):
+        super(InviteEliScenario, self).remove_duplicate_packages()
+        packages = []
+        for package in self.packages:
+            if package.headers["retfunc"].startswith("ELI") \
+                    or package.headers["tofunc"].startswith("ELI"):
+                if not package.headers["tofunc"].startswith("ASM?"):
+                    packages.append(package)
+        self.packages = packages
