@@ -143,7 +143,7 @@ class SipMessage(BaseMessage):
                 #    break
                 body.append(line)
             body = "\n".join(body)
-        return SipMessage(headers=headers, status=status,
+        yield SipMessage(headers=headers, status=status,
                           is_request=is_request, method=method,
                           body=body, request_line=request_line)
 

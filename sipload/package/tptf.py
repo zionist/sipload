@@ -117,16 +117,8 @@ class TptfMessage(BaseMessage):
             return "New"
 
 
-
     @classmethod
-    def parse(cls, msg):
-        """
-        Create objects from text message. Can be two or more
-        messages in one message text
-        :param msg: text message
-        :return: TptfMessage object
-        """
-        # [name, size, struct type]
+    def parse_header(cls, msg):
         header_format = [
             ["issuestamp", 4, "<i"],
             ["compstamp", 4, "<i"],
@@ -144,30 +136,41 @@ class TptfMessage(BaseMessage):
             ["comptransnumb", 2, "<h"],
             ["datalen", 4, "<i"],
             ["udata", 8, "<8s"],
-        ]
+            ]
 
+        headers = {}
+        header_str = msg[:64]
+        for frm in header_format:
+            headers[frm[0]] = struct.unpack(frm[2], header_str[:frm[1]])[0]
+            header_str = header_str[frm[1]:]
+        return headers
+
+
+    @classmethod
+    def parse(cls, msg):
+        """
+        Create objects from text message. Can be two or more
+        messages in one message text
+        :param msg: text message
+        :return: TptfMessage object
+        """
         try:
-            # headers = OrderedDict()
-            headers = {}
-            header_str = msg[:64]
-            for frm in header_format:
-                headers[frm[0]] = struct.unpack(frm[2], header_str[:frm[1]])[0]
-                header_str = header_str[frm[1]:]
-            # some postprocces
-            # headers["class"] = hex(headers["class"])
-            # we know the header size is 64 bytes
-            data = msg[64:]
+            while msg:
+                headers = cls.parse_header(msg)
+                # we know header size
+                msg = msg[64:]
 
-            if not data:
-                return TptfMessage(headers=headers)
+                if not headers["datalen"]:
+                    yield TptfMessage(headers=headers)
 
-            ficses = []
-            while data:
-                fics = TptfFics.parse(data)
-                ficses.append(fics)
-                data = data[fics.size():]
-
-            return TptfMessage(headers=headers, ficses=ficses)
+                ficses = []
+                data = msg[:headers["datalen"]]
+                while data:
+                    fics = TptfFics.parse(data)
+                    ficses.append(fics)
+                    data = data[fics.size():]
+                msg = msg[headers["datalen"]:]
+                yield TptfMessage(headers=headers, ficses=ficses)
         except struct.error as e:
             logging.warning("TPTF parse header error")
             logging.warning("Data for parse was: #%s#" % msg)

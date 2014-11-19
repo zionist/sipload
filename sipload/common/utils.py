@@ -35,11 +35,12 @@ def parse_packages(filename):
     :return: Iterator with packages
     """
     num = 0
+    pcap_num = 0
     with open(filename) as f:
         pcap = dpkt.pcap.Reader(f)
         if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
             for ts, buf in pcap:
-                num += 1
+                pcap_num += 1
                 sll = dpkt.sll.SLL(buf)
                 ip = sll.data
                 #if type(ip.data) != TCP and type(ip.data) != UDP:
@@ -48,13 +49,15 @@ def parse_packages(filename):
                     package_type = determine_package_type(ip.data.data)
                     if package_type:
                         try:
-                            package = package_type.parse(ip.data.data)
+                            for package in package_type.parse(ip.data.data):
+                                num += 1
+                                package.set_ts(ts)
+                                package.set_pcap_package(sll)
+                                package.set_num(num)
+                                package.set_pcap_num(pcap_num)
+                                yield package
                         except ParseException:
                             continue
-                        package.set_ts(ts)
-                        package.set_pcap_package(sll)
-                        package.set_num(num)
-                        yield package
         else:
             raise WrongFileFormatException(filename)
 

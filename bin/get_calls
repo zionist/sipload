@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 import ConfigParser
-
 import logging
 import sys
 from optparse import OptionParser
+
 import os
-from sipload.saicall import CredSaiCall, InviteSaiCall
+from sipload.scenario.eli_call import InviteEliScenario
+from sipload.scenario.sai_call import CredSaiScenario, InviteSaiScenario
 from sipload.common.utils import parse_packages
+
 
 def distribute_calls_process(call):
     for package in parse_packages(opts.filename):
@@ -23,6 +25,9 @@ if __name__ == '__main__':
     #optp.add_option('-v', '--verbose', help='set logging to DEBUG',
     #                action='store_const', dest='loglevel',
     #                const=5, default=logging.INFO)
+    optp.add_option('-t', '--type',
+                    help='component test type "SAI" or "ELI"',
+                    dest='type', default="ELI")
     optp.add_option('-f', '--file',
                     help='pcap file sip package',
                     dest='filename')
@@ -39,6 +44,11 @@ if __name__ == '__main__':
 
     if not opts.filename:
         print("Please specify the pcap filename")
+        optp.print_help()
+        sys.exit(1)
+
+    if not opts.type:
+        print("Please specify component test type")
         optp.print_help()
         sys.exit(1)
 
@@ -68,18 +78,38 @@ if __name__ == '__main__':
 
     calls = []
     for package in parse_packages(opts.filename):
-        if CredSaiCall.is_call_start(opts, package):
-            call = CredSaiCall(opts=opts, start_package=package)
-            calls.append(call)
-            continue
-        if InviteSaiCall.is_call_start(opts, package):
-            call = InviteSaiCall(opts=opts, start_package=package)
-            calls.append(call)
-            continue
+        if opts.type == "SAI":
+            if CredSaiScenario.is_call_start(opts, package):
+                call = CredSaiScenario(opts=opts, start_package=package)
+                calls.append(call)
+                continue
+            if InviteSaiScenario.is_call_start(opts, package):
+                call = InviteSaiScenario(opts=opts, start_package=package)
+                calls.append(call)
+                continue
+
+        if opts.type == "ELI":
+            if InviteEliScenario.is_call_start(opts, package):
+                call = InviteEliScenario(opts=opts, start_package=package)
+                calls.append(call)
+                continue
 
         for call in calls:
             if call.is_call_package(package):
                 call.add_package(package)
+
+
+    # second run for ELI
+    if opts.type == "ELI":
+        for package in parse_packages(opts.filename):
+            for call in calls:
+                if call.is_call_package(package):
+                    call.add_package(package)
+
+        for package in parse_packages(opts.filename):
+            for call in calls:
+                if call.is_call_package(package):
+                    call.add_package(package)
 
     for call in calls:
         call.remove_duplicate_packages()
@@ -88,9 +118,11 @@ if __name__ == '__main__':
         call.remove_duplicate_calls(calls)
 
     for call in calls:
+        #if call.start_num == 68:
+        #    call.save_pcap()
+
         call.save_pcap()
 
     print "Total calls count is %s" % len(calls)
-        # call.save_pcap()
 
 

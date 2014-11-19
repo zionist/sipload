@@ -10,6 +10,7 @@ class BaseMessage(object):
         self.pcap_package = None
         self.ts = None
         self.num = 0
+        self.pcap_num = 0
 
     @classmethod
     def parse(cls, msg):
@@ -26,6 +27,9 @@ class BaseMessage(object):
 
     def set_num(self, num):
         self.num = num
+
+    def set_pcap_num(self, pcap_num):
+        self.pcap_num = pcap_num
 
     def set_pcap_package(self, pcap_package):
         self.pcap_package = pcap_package
