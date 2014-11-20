@@ -89,10 +89,10 @@ if __name__ == '__main__':
                 continue
 
         if opts.type == "ELI":
-            #if InbcEliScenario.is_call_start(opts, package):
-            #    call = InbcEliScenario(opts=opts, start_package=package)
-            #    calls.append(call)
-            #    continue
+            if InbcEliScenario.is_call_start(opts, package):
+                call = InbcEliScenario(opts=opts, start_package=package)
+                calls.append(call)
+                continue
             if MkkcMkcaEliScenario.is_call_start(opts, package):
                 call = MkkcMkcaEliScenario(opts, start_package=package)
                 calls.append(call)
