@@ -4,9 +4,9 @@ from sipload.scenario.base import BaseScenario
 __author__ = 'slaviann'
 
 
-class InviteEliScenario(BaseScenario):
+class InbcEliScenario(BaseScenario):
     def __init__(self, opts, start_package):
-        super(InviteEliScenario, self).__init__(opts, start_package)
+        super(InbcEliScenario, self).__init__(opts, start_package)
         self.sipsessid = None
         self.li_sessid = None
         self.session = None
@@ -99,7 +99,84 @@ class InviteEliScenario(BaseScenario):
         return False
 
     def remove_duplicate_packages(self):
-        super(InviteEliScenario, self).remove_duplicate_packages()
+        super(InbcEliScenario, self).remove_duplicate_packages()
+        packages = []
+        for package in self.packages:
+            if package.headers["retfunc"].startswith("ELI") \
+                    or package.headers["tofunc"].startswith("ELI"):
+                if not package.headers["tofunc"].startswith("ASM?"):
+                    packages.append(package)
+        self.packages = packages
+
+
+class MkkcMkcaEliScenario(BaseScenario):
+    def __init__(self, opts, start_package):
+        super(MkkcMkcaEliScenario, self).__init__(opts, start_package)
+        self.eli_instances = []
+        self.mkcc_trans_num = start_package.headers["transnumb"]
+        self.sai_sess = -1
+        self.li_sess = -1
+        self.session = -1
+
+    @classmethod
+    def is_call_start(cls, opts, package):
+        """
+        Check is this package call start or no
+        :param package:
+        :return: True if package is call start
+        """
+        if type(package) == TptfMessage:
+            if package.headers["transnumb"]:
+                if package.headers["tofunc"].startswith("ELI"):
+                    if package.headers["tofunc"].endswith("MKCC"):
+                        if package.state == "New":
+                            if package.ip_dst != "127.0.0.1":
+                                if package.ip_src != "127.0.0.1":
+                                    if not package.get_fics_value_by_name("SESSION"):
+                                        return True
+        return False
+
+    def _is_reply_against_mkcc(self, package):
+        if package.headers["tofunc"].startswith("ELI"):
+            if package.headers["tofunc"].endswith("MKCC"):
+                if package.state == "Reply":
+                    if package.headers["transnumb"] == self.mkcc_trans_num:
+                        self.sai_sess = package.get_fics_value_by_name("SAI_SESS")
+                        self.li_sess = package.get_fics_value_by_name("LI_SESS")
+                        self.session = package.get_fics_value_by_name("SESSION")
+                        return True
+
+    def _is_call_package(self, package):
+        if package.get_fics_value_by_name("SESSION"):
+            if package.get_fics_value_by_name("SESSION") == self.session:
+                return True
+        if package.headers["tofunc"].startswith("SAI"):
+            if self.sai_sess == package.get_fics_value_by_name("SESSION"):
+                return True
+        if package.headers["tofunc"].startswith("MLI") or package.headers["tofunc"].startswith("_LI"):
+            if self.li_sess == package.get_fics_value_by_name("SESSION"):
+                return True
+
+
+    def is_call_package(self, package):
+        if self._is_reply_against_mkcc(package):
+            return True
+        if self._is_call_package(package):
+            # get ELI instance
+            if package.headers["retfunc"].startswith("ELI"):
+                instance = package.headers["retfunc"][-4:]
+                if instance not in self.eli_instances:
+                    self.eli_instances.append(instance)
+            return True
+        # get all transcation for instance
+        for instance in self.eli_instances:
+            if package.headers["retfunc"].startswith("ELI"):
+                if package.headers["retfunc"][-4:] == instance:
+                    return True
+        return False
+
+    def remove_duplicate_packages(self):
+        super(MkkcMkcaEliScenario, self).remove_duplicate_packages()
         packages = []
         for package in self.packages:
             if package.headers["retfunc"].startswith("ELI") \

@@ -1,3 +1,4 @@
+import socket
 import struct
 import dpkt
 from dpkt import hexdump
@@ -43,8 +44,8 @@ def parse_packages(filename):
                 pcap_num += 1
                 sll = dpkt.sll.SLL(buf)
                 ip = sll.data
-                #if type(ip.data) != TCP and type(ip.data) != UDP:
-                #    continue
+                if type(ip.data) != TCP and type(ip.data) != UDP:
+                    continue
                 if ip.data.data:
                     package_type = determine_package_type(ip.data.data)
                     if package_type:
@@ -55,6 +56,12 @@ def parse_packages(filename):
                                 package.set_pcap_package(sll)
                                 package.set_num(num)
                                 package.set_pcap_num(pcap_num)
+                                package.set_ip_dst(socket.inet_ntoa(ip.dst))
+                                package.set_ip_src(socket.inet_ntoa(ip.src))
+
+                                # socket.inet_ntoa(struct.unpack("<L", ip.dst))
+                                #package.set_ip_dst(socket.inet_ntoa(struct.pack("<L", ip.dst)))
+                                # package.set_ip_src(socket.inet_ntoa(struct.pack("<L", ip.src)))
                                 yield package
                         except ParseException:
                             continue

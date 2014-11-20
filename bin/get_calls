@@ -5,7 +5,7 @@ import sys
 from optparse import OptionParser
 
 import os
-from sipload.scenario.eli_call import InviteEliScenario
+from sipload.scenario.eli_call import InbcEliScenario, MkkcMkcaEliScenario
 from sipload.scenario.sai_call import CredSaiScenario, InviteSaiScenario
 from sipload.common.utils import parse_packages
 
@@ -89,8 +89,12 @@ if __name__ == '__main__':
                 continue
 
         if opts.type == "ELI":
-            if InviteEliScenario.is_call_start(opts, package):
-                call = InviteEliScenario(opts=opts, start_package=package)
+            #if InbcEliScenario.is_call_start(opts, package):
+            #    call = InbcEliScenario(opts=opts, start_package=package)
+            #    calls.append(call)
+            #    continue
+            if MkkcMkcaEliScenario.is_call_start(opts, package):
+                call = MkkcMkcaEliScenario(opts, start_package=package)
                 calls.append(call)
                 continue
 
@@ -98,8 +102,7 @@ if __name__ == '__main__':
             if call.is_call_package(package):
                 call.add_package(package)
 
-
-    # second run for ELI
+    # triple run for ELI
     if opts.type == "ELI":
         for package in parse_packages(opts.filename):
             for call in calls:
@@ -114,13 +117,10 @@ if __name__ == '__main__':
     for call in calls:
         call.remove_duplicate_packages()
 
-#    for call in calls:
-#        call.remove_duplicate_calls(calls)
+    for call in calls:
+        call.remove_duplicate_calls(calls)
 
     for call in calls:
-        #if call.start_num == 68:
-        #    call.save_pcap()
-
         call.save_pcap()
 
     print "Total calls count is %s" % len(calls)

@@ -11,6 +11,8 @@ class BaseMessage(object):
         self.ts = None
         self.num = 0
         self.pcap_num = 0
+        self.ip_dst = None
+        self.ip_src = None
 
     @classmethod
     def parse(cls, msg):
@@ -34,4 +36,8 @@ class BaseMessage(object):
     def set_pcap_package(self, pcap_package):
         self.pcap_package = pcap_package
 
+    def set_ip_src(self, ip_src):
+        self.ip_src = ip_src
 
+    def set_ip_dst(self, ip_dst):
+        self.ip_dst = ip_dst
