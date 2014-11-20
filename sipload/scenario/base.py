@@ -66,8 +66,9 @@ class BaseScenario(object):
         new_packages_nums = []
         new_packages = []
         for package in self.packages:
-            if package.state == "Ack":
-                continue
+            if type(package) == TptfMessage:
+                if package.state == "Ack":
+                    continue
             if package.num not in new_packages_nums:
                 new_packages.append(package)
                 new_packages_nums.append(package.num)
