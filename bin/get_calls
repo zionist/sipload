@@ -9,7 +9,7 @@ from sipload.package import TptfMessage
 from sipload.scenario.eli_call import InbcEliScenario, MkkcMkcaEliScenario, \
     get_eli_inbc_scen_from_call_start
 from sipload.scenario.sai_call import CredSaiScenario, InviteSaiScenario
-from sipload.common.utils import parse_packages, parse_packages_async
+from sipload.common.utils import parse_packages, get_calls_start_async
 from multiprocessing import Pool
 
 
@@ -80,20 +80,27 @@ if __name__ == '__main__':
     # dark magic
     setattr(opts, "config", config)
 
-    pool = Pool(processes=8)
+    # pool = Pool(processes=8)
 
 
     results = []
     # results.append(pool.apply_async(get_eli_inbc_scen_from_call_start,
     #                     args=(package, )))
 
-    packages = []
     #packages = parse_packages_async(opts.filename)
-    calls = parse_packages_async(opts.filename)
+    calls = get_calls_start_async(opts.filename)
+    print "# 1"
+    print sys.getsizeof(calls)
+    calls = get_calls_start_async(opts.filename)
+    print "# 2"
+    calls = get_calls_start_async(opts.filename)
+    print "# 3"
+
     #for call in parse_packages_async(opts.filename):
     #    print call
-    print "# * 100"
-    calls = parse_packages_async(opts.filename)
+    # print "# * 100"
+    # calls = get_calls_start_async(opts.filename)
+    # print calls
     #print sys.getsizeof(calls)
         #if opts.type == "SAI":
         #    if CredSaiScenario.is_call_start(opts, package):
@@ -150,8 +157,8 @@ if __name__ == '__main__':
     #    call.save_pcap()
 
     # print 1 in inbc_call_starts
-    scens = [scen.get() for scen in results if scen.get()]
-    print scens
+    #calls = [calls.get() for scen in results if scen.get()]
+    #print calls
 
 
     #print "Total calls count is %s" % len(calls)

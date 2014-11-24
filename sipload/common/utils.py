@@ -32,7 +32,7 @@ def determine_package_type(msg):
     return None
 
 
-def parse_aync(buf, ts):
+def parse_calls_start_aync(buf, ts):
     sll = dpkt.sll.SLL(buf)
     ip = sll.data
     if type(ip.data) != TCP and type(ip.data) != UDP:
@@ -59,7 +59,7 @@ def parse_aync(buf, ts):
     return calls
 
 
-def parse_packages_async(filename):
+def get_calls_start_async(filename):
     """
     Parse packages from filename.
     :param filename:
@@ -69,16 +69,19 @@ def parse_packages_async(filename):
     pcap_num = 0
     with open(filename) as f:
         pcap = dpkt.pcap.Reader(f)
-        pool = Pool(processes=8)
+        pool = Pool(processes=1)
         results = []
         if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
             for ts, buf in pcap:
                 pcap_num += 1
-                results.append(pool.apply_async(parse_aync,
+                results.append(pool.apply_async(parse_calls_start_aync,
                                                 args=(buf, ts)))
+                del ts
+                del buf
         reses = []
         [reses.extend(result.get()) for result in results if result.get()]
-        print reses
+        del pcap
+        del buf
         return reses
         # yield reses
         #for result in reses:
