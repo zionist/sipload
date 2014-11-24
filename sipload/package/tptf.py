@@ -47,8 +47,8 @@ class TptfFics(object):
                     name.append(c)
             params["name"] = "".join(name)
         except struct.error as e:
-            logging.warning("TPTF parse fics error")
-            logging.warning("Data for parse was: #%s#" % body)
+            logging.debug("TPTF parse fics error")
+            logging.debug("Data for parse was: #%s#" % body)
             raise e
         return TptfFics(params=params)
 
@@ -171,8 +171,8 @@ class TptfMessage(BaseMessage):
                 msg = msg[headers["datalen"]:]
                 yield TptfMessage(headers=headers, ficses=ficses)
         except struct.error as e:
-            logging.warning("TPTF parse header error")
-            logging.warning("Data for parse was: #%s#" % msg)
+            logging.debug("TPTF parse header error")
+            logging.debug("Data for parse was: #%s#" % msg)
             raise ParseException("Can't parse TPTF data")
 
 

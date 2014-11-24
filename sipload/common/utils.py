@@ -1,6 +1,8 @@
+import pickle
 import socket
 import struct
 import dpkt
+import gc
 from dpkt import hexdump
 from dpkt.tcp import TCP
 from dpkt.udp import UDP
@@ -11,8 +13,7 @@ from sipload.exceptions import ParseException, WrongFileFormatException
 from sipload.package import SipMessage, TptfMessage
 from sipload.package import SipMessage
 from sipload.package import TptfMessage
-from multiprocessing import Process, Manager, Pool
-from sipload.scenario.eli_call import get_eli_inbc_scen_from_call_start
+from multiprocessing import Process, Manager, Pool, Lock, cpu_count, Queue
 
 __author__ = 'slaviann'
 
@@ -31,100 +32,64 @@ def determine_package_type(msg):
         return TptfMessage
     return None
 
-
-def parse_calls_start_aync(buf, ts):
+def parse_packages_aync(buf, ts, queue, pcap_num):
     sll = dpkt.sll.SLL(buf)
     ip = sll.data
     if type(ip.data) != TCP and type(ip.data) != UDP:
         return None
-    calls = []
     if ip.data.data:
         package_type = determine_package_type(ip.data.data)
         if package_type:
             try:
                 for package in package_type.parse(ip.data.data):
+                    package.set_pcap_num(pcap_num)
                     package.set_ts(ts)
-                    # package.set_pcap_package(sll)
+                    package.set_pcap_package(sll)
                     package.set_ip_dst(socket.inet_ntoa(ip.dst))
                     package.set_ip_src(socket.inet_ntoa(ip.src))
 
                     # socket.inet_ntoa(struct.unpack("<L", ip.dst))
                     #package.set_ip_dst(socket.inet_ntoa(struct.pack("<L", ip.dst)))
                     # package.set_ip_src(socket.inet_ntoa(struct.pack("<L", ip.src)))
-                    call_start = get_eli_inbc_scen_from_call_start(package)
-                    if call_start:
-                        calls.append(call_start)
+                    # packages.append(package)
+                    #lock.acquire()
+                    #lock.release()
+                    queue.put(package)
             except ParseException:
                 return None
-    return calls
+    del ip
+    del sll
+    del buf
+    del ts
+    return None
 
-
-def get_calls_start_async(filename):
-    """
-    Parse packages from filename.
-    :param filename:
-    :return: Iterator with packages
-    """
-    num = 0
+def get_packages_async(filename):
     pcap_num = 0
-    with open(filename) as f:
-        pcap = dpkt.pcap.Reader(f)
-        pool = Pool(processes=1)
-        results = []
-        if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
-            for ts, buf in pcap:
-                pcap_num += 1
-                results.append(pool.apply_async(parse_calls_start_aync,
-                                                args=(buf, ts)))
-                del ts
-                del buf
-        reses = []
-        [reses.extend(result.get()) for result in results if result.get()]
-        del pcap
-        del buf
-        return reses
-        # yield reses
-        #for result in reses:
-        #    yield result
-
-
-def parse_packages(filename):
-    """
-    Parse packages from filename.
-    :param filename:
-    :return: Iterator with packages
-    """
-    num = 0
-    pcap_num = 0
-    with open(filename) as f:
-        pcap = dpkt.pcap.Reader(f)
-        if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
-            for ts, buf in pcap.__iter__():
-                pcap_num += 1
-                sll = dpkt.sll.SLL(buf)
-                ip = sll.data
-                if type(ip.data) != TCP and type(ip.data) != UDP:
-                    continue
-                if ip.data.data:
-                    package_type = determine_package_type(ip.data.data)
-                    if package_type:
-                        try:
-                            for package in package_type.parse(ip.data.data):
-                                num += 1
-                                package.set_ts(ts)
-                                # package.set_pcap_package(sll)
-                                package.set_num(num)
-                                package.set_pcap_num(pcap_num)
-                                package.set_ip_dst(socket.inet_ntoa(ip.dst))
-                                package.set_ip_src(socket.inet_ntoa(ip.src))
-
-                                # socket.inet_ntoa(struct.unpack("<L", ip.dst))
-                                #package.set_ip_dst(socket.inet_ntoa(struct.pack("<L", ip.dst)))
-                                # package.set_ip_src(socket.inet_ntoa(struct.pack("<L", ip.src)))
-                                yield package
-                        except ParseException:
-                            continue
-        else:
-            raise WrongFileFormatException(filename)
+    f = open(filename)
+    manager = Manager()
+    queue = manager.Queue()
+    lock = manager.Lock()
+    pcap = dpkt.pcap.Reader(f)
+    pool = Pool(processes=cpu_count() + 2)
+    results = []
+    if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
+        for ts, buf in pcap:
+            pcap_num += 1
+            results.append(pool.apply_async(parse_packages_aync,
+                                            args=(buf, ts, queue, pcap_num)))
+            del ts
+            del buf
+    #pickle_file = open("/tmp/pickle", 'wb')
+    while True:
+        if queue.empty():
+            break
+        yield queue.get()
+        # pickle.dump(queue.get(), pickle_file, -1)
+    #pickle_file.close()
+    #reses = []
+    #[reses.extend(result.get()) for result in results if result.get()]
+    #del pcap
+    #f.close()
+    #return reses
 
 

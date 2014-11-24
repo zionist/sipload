@@ -27,7 +27,7 @@ class BaseScenario(object):
         raise NotImplemented
 
     def _sort(self):
-        self.packages = sorted(self.packages, key=lambda key: key.num)
+        self.packages = sorted(self.packages, key=lambda key: key.pcap_num)
 
     def save_pcap(self, dir_name):
         """

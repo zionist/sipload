@@ -3,19 +3,6 @@ from sipload.scenario.base import BaseScenario
 
 __author__ = 'slaviann'
 
-def get_eli_inbc_scen_from_call_start(package):
-    """
-    Check is this package call start or no
-    :param package:
-    :return: InbcEliScenario instance
-    """
-    if type(package) == TptfMessage:
-        if package.headers["transnumb"] == 0:
-            if package.headers["tofunc"].startswith("ELI") and \
-                    package.headers["tofunc"].endswith("INBC"):
-                if package.state == "New":
-                    return InbcEliScenario(start_package=package)
-    return None
 
 class InbcEliScenario(BaseScenario):
     def __init__(self, start_package):
@@ -26,6 +13,21 @@ class InbcEliScenario(BaseScenario):
         self.eli_instances = []
         self.sip_call_id = start_package.get_fics_value_by_name("CALL_ID")
 
+
+    @classmethod
+    def is_call_start(cls, package):
+        """
+        Check is this package call start or no
+        :param package:
+        :return: True if package is call start
+        """
+        if type(package) == TptfMessage:
+            if package.headers["transnumb"] == 0:
+                if package.headers["tofunc"].startswith("ELI") and \
+                        package.headers["tofunc"].endswith("INBC"):
+                    if package.state == "New":
+                        return True
+        return False
 
     def _is_first_exec(self, package):
         """
@@ -109,8 +111,8 @@ class InbcEliScenario(BaseScenario):
 
 
 class MkkcMkcaEliScenario(BaseScenario):
-    def __init__(self, opts, start_package):
-        super(MkkcMkcaEliScenario, self).__init__(opts, start_package)
+    def __init__(self, start_package):
+        super(MkkcMkcaEliScenario, self).__init__(start_package)
         self.eli_instances = []
         self.mkcc_trans_num = start_package.headers["transnumb"]
         self.sai_sess = -1
@@ -118,7 +120,7 @@ class MkkcMkcaEliScenario(BaseScenario):
         self.session = -1
 
     @classmethod
-    def is_call_start(cls, opts, package):
+    def is_call_start(cls, package):
         """
         Check is this package call start or no
         :param package:

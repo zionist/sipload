@@ -19,7 +19,7 @@ class CredSaiScenario(BaseScenario):
 
 
     @classmethod
-    def is_call_start(cls, opts, package):
+    def is_call_start(cls, package):
         """
         Check is this package call start or no
         :param package:
@@ -89,8 +89,8 @@ class CredSaiScenario(BaseScenario):
 
 
 class InviteSaiScenario(BaseScenario):
-    def __init__(self, opts, start_package):
-        super(InviteSaiCall, self).__init__(opts, start_package)
+    def __init__(self, start_package):
+        super(InviteSaiCall, self).__init__(start_package)
         self.sip_call_id = start_package.call_id
 
     @classmethod

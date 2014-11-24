@@ -3,20 +3,15 @@ import ConfigParser
 import logging
 import sys
 from optparse import OptionParser
+import gc
 
 import os
 from sipload.package import TptfMessage
-from sipload.scenario.eli_call import InbcEliScenario, MkkcMkcaEliScenario, \
-    get_eli_inbc_scen_from_call_start
+from sipload.scenario.eli_call import InbcEliScenario, MkkcMkcaEliScenario
 from sipload.scenario.sai_call import CredSaiScenario, InviteSaiScenario
-from sipload.common.utils import parse_packages, get_calls_start_async
+from sipload.common.utils import get_packages_async
 from multiprocessing import Pool
 
-
-def distribute_calls_process(call):
-    for package in parse_packages(opts.filename):
-        if call.sai_package_related_to_call(package):
-            pass
 
 
 if __name__ == '__main__':
@@ -41,6 +36,9 @@ if __name__ == '__main__':
     optp.add_option('-o', '--outdir',
                     help='outdir for pcap files',
                     dest='outdir')
+    optp.add_option('-p', '--pickle ',
+                    help='use pickle instead of memory (slow)',
+                    dest='pickle', action="store_true")
     opts, args = optp.parse_args()
 
     logging.basicConfig(level=opts.loglevel,
@@ -83,84 +81,67 @@ if __name__ == '__main__':
     # pool = Pool(processes=8)
 
 
-    results = []
-    # results.append(pool.apply_async(get_eli_inbc_scen_from_call_start,
-    #                     args=(package, )))
 
     #packages = parse_packages_async(opts.filename)
-    calls = get_calls_start_async(opts.filename)
-    print "# 1"
-    print sys.getsizeof(calls)
-    calls = get_calls_start_async(opts.filename)
-    print "# 2"
-    calls = get_calls_start_async(opts.filename)
-    print "# 3"
+    calls = []
+    logging.info("we are parsing ELI scenarios, + 2 extra run")
+    logging.info("first run")
+    for package in get_packages_async(opts.filename):
+        if opts.type == "SAI":
+            if CredSaiScenario.is_call_start(package):
+                call = CredSaiScenario(opts=opts, start_package=package)
+                calls.append(call)
+                continue
+            if InviteSaiScenario.is_call_start(package):
+                call = InviteSaiScenario(start_package=package)
+                calls.append(call)
+                continue
 
-    #for call in parse_packages_async(opts.filename):
-    #    print call
-    # print "# * 100"
-    # calls = get_calls_start_async(opts.filename)
-    # print calls
-    #print sys.getsizeof(calls)
-        #if opts.type == "SAI":
-        #    if CredSaiScenario.is_call_start(opts, package):
-        #        call = CredSaiScenario(opts=opts, start_package=package)
-        #        calls.append(call)
-        #        continue
-        #    if InviteSaiScenario.is_call_start(opts, package):
-        #        call = InviteSaiScenario(opts=opts, start_package=package)
-        #        calls.append(call)
-        #        continue
+        if opts.type == "ELI":
+            if InbcEliScenario.is_call_start(package):
+                call = InbcEliScenario(start_package=package)
+                calls.append(call)
+                continue
+            if MkkcMkcaEliScenario.is_call_start(package):
+                call = MkkcMkcaEliScenario(start_package=package)
+                calls.append(call)
+                continue
 
-        #if opts.type == "ELI":
-        #    results.append(pool.apply_async(get_eli_inbc_scen_from_call_start,
-        #                     args=(package, )))
-        #    calls = []
-            #if results.ready():
-            #    while True:
-            #        inbc_call_starts.append(results.get())
-
-        #print inbc_call_starts
-
-        #    if InbcEliScenario.is_call_start(opts, package):
-        #        call = InbcEliScenario(opts=opts, start_package=package)
-        #        calls.append(call)
-        #        continue
-        #    if MkkcMkcaEliScenario.is_call_start(opts, package):
-        #        call = MkkcMkcaEliScenario(opts, start_package=package)
-        #        calls.append(call)
-        #        continue
-
-        #for call in calls:
-        #    if call.is_call_package(package):
-        #        call.add_package(package)
+        for call in calls:
+            if call.is_call_package(package):
+                call.add_package(package)
 
     # triple run for ELI
-    #if opts.type == "ELI":
-    #    for package in parse_packages(opts.filename):
-    #        for call in calls:
-    #            if call.is_call_package(package):
-    #                call.add_package(package)
-    #
-    #    for package in parse_packages(opts.filename):
-    #        for call in calls:
-    #            if call.is_call_package(package):
-    #                call.add_package(package)
+    if opts.type == "ELI":
+        gc.collect()
+        logging.info("second run")
+        for package in get_packages_async(opts.filename):
+            for call in calls:
+                if call.is_call_package(package):
+                    call.add_package(package)
+        gc.collect()
+        logging.info("third run")
+        for package in get_packages_async(opts.filename):
+            for call in calls:
+                if call.is_call_package(package):
+                    call.add_package(package)
 
-    #for call in calls:
-    #    call.remove_duplicate_packages()
+    logging.info("remove duplicate packages")
+    for call in calls:
+        call.remove_duplicate_packages()
 
-    #for call in calls:
-    #    call.remove_duplicate_calls(calls)
+    logging.info("remove duplicate calls")
+    for call in calls:
+        call.remove_duplicate_calls(calls)
 
-    #for call in calls:
-    #    call.save_pcap()
+    for call in calls:
+        call.save_pcap(opts.outdir)
 
     # print 1 in inbc_call_starts
     #calls = [calls.get() for scen in results if scen.get()]
     #print calls
 
 
-    #print "Total calls count is %s" % len(calls)
+    print "Total calls count is %s" % len(calls)
 
 
