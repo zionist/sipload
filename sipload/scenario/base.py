@@ -4,14 +4,14 @@ from sipload.package import TptfMessage, SipMessage
 
 
 class BaseScenario(object):
-    def __init__(self, opts, start_package):
+    def __init__(self, start_package):
         """
         Main call class. Must be separate class for each call logic
         :param start_package:
         :return:
         """
         self.packages = []
-        self.opts = opts
+        self.packages_nums = []
         self.add_package(start_package)
         # get SDP session value from ELI CRED transaction
         self.sip_call_id = None
@@ -20,6 +20,7 @@ class BaseScenario(object):
 
     def add_package(self, package):
         self.packages.append(package)
+        self.packages_nums.append(package.num)
         # self.hash.update(package.gen_message)
 
     def gen_test(self):
@@ -28,14 +29,14 @@ class BaseScenario(object):
     def _sort(self):
         self.packages = sorted(self.packages, key=lambda key: key.num)
 
-    def save_pcap(self):
+    def save_pcap(self, dir_name):
         """
         Saves pcap file for given call
         pcap file name is first call pcap frame number
         """
         self._sort()
         file_name = "%s.pcap" % self.start_num
-        full_name = os.path.join(self.opts.outdir, file_name)
+        full_name = os.path.join(dir_name, file_name)
         out_file = Writer(open(full_name, 'wb'), linktype=DLT_LINUX_SLL)
         for package in self.packages:
             out_file.writepkt(package.pcap_package, package.ts)

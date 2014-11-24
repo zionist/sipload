@@ -11,7 +11,7 @@ class TptfFics(object):
         self.params = params
         self.name = params["name"]
         self.data = params["data"]
-        self.logger = logging.getLogger()
+        # self.logger = logging.getLogger()
 
 
     def __str__(self):
@@ -65,7 +65,6 @@ class TptfMessage(BaseMessage):
 
     def __init__(self, headers={}, body=None, ficses=[]):
         super(TptfMessage, self).__init__(headers=headers, body=body)
-        self.logger = logging.getLogger()
         self.ficses = ficses
 
     def __str__(self):

@@ -23,7 +23,7 @@ class CredSaiScenario(BaseScenario):
         """
         Check is this package call start or no
         :param package:
-        :return: True if package is call start
+        :return:  if package is call start
         """
         if type(package) == TptfMessage and package.state == "New":
             #if package.headers["retfunc"].startswith("ELI"):
