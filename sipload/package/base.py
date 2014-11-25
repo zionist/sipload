@@ -4,7 +4,6 @@ __author__ = 'slaviann'
 
 class BaseMessage(object):
     def __init__(self, headers={}, body=None, ts=None):
-        self.logger = logging.getLogger()
         self.headers = headers
         self.body = body
         self.pcap_package = None

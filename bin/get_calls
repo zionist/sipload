@@ -3,17 +3,13 @@ import ConfigParser
 import logging
 import sys
 from optparse import OptionParser
+import gc
 
 import os
 from sipload.scenario.eli_call import InbcEliScenario, MkkcMkcaEliScenario
 from sipload.scenario.sai_call import CredSaiScenario, InviteSaiScenario
-from sipload.common.utils import parse_packages
+from sipload.common.utils import get_packages, get_packages_async_2
 
-
-def distribute_calls_process(call):
-    for package in parse_packages(opts.filename):
-        if call.sai_package_related_to_call(package):
-            pass
 
 if __name__ == '__main__':
     usage = "usage: %prog -f <pcap file> -o outdir[options]"
@@ -77,7 +73,15 @@ if __name__ == '__main__':
     setattr(opts, "config", config)
 
     calls = []
-    for package in parse_packages(opts.filename):
+    packages_num = 0
+
+    if config.get("main", "async") == "true":
+        get_packages_func = get_packages_async_2
+    else:
+        get_packages_func = get_packages
+
+    logging.info("first run")
+    for package in get_packages_func(opts.filename):
         if opts.type == "SAI":
             if CredSaiScenario.is_call_start(opts, package):
                 call = CredSaiScenario(opts=opts, start_package=package)
@@ -101,27 +105,42 @@ if __name__ == '__main__':
         for call in calls:
             if call.is_call_package(package):
                 call.add_package(package)
+    #print(packages_num)
+    #print len(calls)
 
     # triple run for ELI
     if opts.type == "ELI":
-        for package in parse_packages(opts.filename):
+        logging.info("we are parsing ELI scenarios, + 2 extra run")
+        logging.info("remove duplicate packages")
+        for call in calls:
+            call.remove_duplicate_packages()
+        gc.collect()
+        logging.info("second run")
+        for package in get_packages_func(opts.filename):
             for call in calls:
                 if call.is_call_package(package):
                     call.add_package(package)
 
-        for package in parse_packages(opts.filename):
+        gc.collect()
+        logging.info("remove duplicate packages")
+        for call in calls:
+            call.remove_duplicate_packages()
+        logging.info("third run")
+        for package in get_packages_func(opts.filename):
             for call in calls:
                 if call.is_call_package(package):
                     call.add_package(package)
 
+    logging.info("remove duplicate packages")
     for call in calls:
         call.remove_duplicate_packages()
 
+    logging.info("remove duplicate calls")
     for call in calls:
         call.remove_duplicate_calls(calls)
 
     for call in calls:
-        call.save_pcap()
+       call.save_pcap()
 
     print "Total calls count is %s" % len(calls)
 
