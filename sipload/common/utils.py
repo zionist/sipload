@@ -61,15 +61,12 @@ def get_packages(filename):
                                 package.set_pcap_num(pcap_num)
                                 package.set_ip_dst(socket.inet_ntoa(ip.dst))
                                 package.set_ip_src(socket.inet_ntoa(ip.src))
-
-                                # socket.inet_ntoa(struct.unpack("<L", ip.dst))
-                                #package.set_ip_dst(socket.inet_ntoa(struct.pack("<L", ip.dst)))
-                                # package.set_ip_src(socket.inet_ntoa(struct.pack("<L", ip.src)))
                                 yield package
                         except ParseException:
                             continue
         else:
             raise WrongFileFormatException(filename)
+
 
 def _iter(filename):
     pcap_num = 0
@@ -81,7 +78,16 @@ def _iter(filename):
                 yield buf
                 pcap_num += 1
 
+
 def _get_packages(buf):
+    leave_fices = [
+        "CALL_ID", "SIPSESSID", "SESSION",
+        "LI_SESSID", "SIPSESSID", "SAI_SESS"
+    ]
+    leave_headers = [
+        "transnumb", "tofunc", "flags",
+        "retfunc", "datalen", "cc", "rsn"
+    ]
     sll = dpkt.sll.SLL(buf)
     ip = sll.data
     packages = []
@@ -91,9 +97,9 @@ def _get_packages(buf):
         package_type = determine_package_type(ip.data.data)
         if package_type:
             try:
-                for package in package_type.parse(ip.data.data):
+                for package in package_type.parse(ip.data.data, leave_fices, leave_headers):
                     package.set_pcap_package(sll)
-                    # package.set_pcap_num(buf.pcap_num)
+                    package.set_pcap_num(buf.pcap_num)
                     package.set_ip_dst(socket.inet_ntoa(ip.dst))
                     package.set_ip_src(socket.inet_ntoa(ip.src))
 
@@ -116,8 +122,7 @@ def get_packages_async_2(filename):
 
     pool = Pool(processes=cpu_count() + 2)
     num = 0
-    # print pool.map(_get_packages, [buf for buf in _iter(filename)])
-    for packages in pool.map(_get_packages, [buf for buf in _iter(filename)]):
+    for packages in pool.map(_get_packages, _iter(filename)):
         if packages:
             for package in packages:
                 package.set_num(num)

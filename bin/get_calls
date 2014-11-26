@@ -3,7 +3,9 @@ import ConfigParser
 import logging
 import sys
 from optparse import OptionParser
+import resource
 import gc
+import time
 
 import os
 from sipload.scenario.eli_call import InbcEliScenario, MkkcMkcaEliScenario
@@ -58,10 +60,10 @@ if __name__ == '__main__':
         optp.print_help()
         sys.exit(1)
 
-    user_file_data = ""
+    # user_file_data = ""
     try:
         with open(opts.filename, 'r') as user_file:
-            user_file_data = user_file.readlines()
+            pass
     except Exception as e:
         print("Can't read file %s" % opts.filename)
         print(e)
@@ -81,6 +83,7 @@ if __name__ == '__main__':
         get_packages_func = get_packages
 
     logging.info("first run")
+    logging.info("mem usage %s MB" % str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000))
     for package in get_packages_func(opts.filename):
         if opts.type == "SAI":
             if CredSaiScenario.is_call_start(opts, package):
@@ -105,8 +108,6 @@ if __name__ == '__main__':
         for call in calls:
             if call.is_call_package(package):
                 call.add_package(package)
-    #print(packages_num)
-    #print len(calls)
 
     # triple run for ELI
     if opts.type == "ELI":
@@ -114,24 +115,27 @@ if __name__ == '__main__':
         logging.info("remove duplicate packages")
         for call in calls:
             call.remove_duplicate_packages()
-        gc.collect()
+        #gc.collect()
         logging.info("second run")
+        logging.info("mem usage %s MB" % str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000))
         for package in get_packages_func(opts.filename):
             for call in calls:
                 if call.is_call_package(package):
                     call.add_package(package)
 
-        gc.collect()
+        #gc.collect()
         logging.info("remove duplicate packages")
         for call in calls:
             call.remove_duplicate_packages()
         logging.info("third run")
+        logging.info("mem usage %s MB" % str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000))
         for package in get_packages_func(opts.filename):
             for call in calls:
                 if call.is_call_package(package):
                     call.add_package(package)
 
     logging.info("remove duplicate packages")
+
     for call in calls:
         call.remove_duplicate_packages()
 
@@ -143,5 +147,7 @@ if __name__ == '__main__':
        call.save_pcap()
 
     print "Total calls count is %s" % len(calls)
+    logging.info("mem usage %s MB" % str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000))
+    # print resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000
 
 
