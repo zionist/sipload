@@ -91,7 +91,6 @@ def _get_packages(buf):
             try:
                 for package in package_type.parse(ip.data.data):
                     package.set_pcap_package(sll)
-                    package.set_pcap_num(buf.pcap_num)
                     package.set_ip_dst(socket.inet_ntoa(ip.dst))
                     package.set_ip_src(socket.inet_ntoa(ip.src))
 
