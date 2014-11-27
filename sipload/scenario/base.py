@@ -53,11 +53,11 @@ class BaseScenario(object):
                     package.headers["tofunc"].endswith("INBC"):
                         if package.state == "New":
                             return True
-                else :
-                    if package.headers["tofunc"].startswith("ELI") and \
-                            package.headers["tofunc"].endswith("INBC"):
-                        if package.state == "New":
-                            return False
+                #else :
+                #    if package.headers["tofunc"].startswith("ELI") and \
+                #            package.headers["tofunc"].endswith("INBC"):
+                #        if package.state == "New":
+                #            return False
                 if package.headers["transnumb"] == 0 \
                         and not package.headers["tofunc"] == "ASM?EXEC":
                     return False
