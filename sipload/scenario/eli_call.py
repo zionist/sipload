@@ -157,7 +157,6 @@ class MkkcMkcaEliScenario(BaseScenario):
             if self.li_sess == package.get_fics_value_by_name("SESSION"):
                 return True
 
-
     def is_call_package(self, package):
         if self._is_reply_against_mkcc(package):
             return True

@@ -17,7 +17,6 @@ class CredSaiScenario(BaseScenario):
         self.eli_instance = start_package.headers["retfunc"][4:]
         self.first_trans_num = start_package.headers["transnumb"]
 
-
     @classmethod
     def is_call_start(cls, opts, package):
         """
@@ -72,7 +71,6 @@ class CredSaiScenario(BaseScenario):
                     return True
         return False
 
-
     def is_call_package(self, package):
         """
         Check is package related to given call
@@ -90,7 +88,7 @@ class CredSaiScenario(BaseScenario):
 
 class InviteSaiScenario(BaseScenario):
     def __init__(self, opts, start_package):
-        super(InviteSaiCall, self).__init__(opts, start_package)
+        super(InviteSaiScenario, self).__init__(opts, start_package)
         self.sip_call_id = start_package.call_id
 
     @classmethod
@@ -125,7 +123,6 @@ class InviteSaiScenario(BaseScenario):
                             return True
         return False
 
-
     def is_call_package(self, package):
         """
         Check is package related to given call
@@ -135,22 +132,5 @@ class InviteSaiScenario(BaseScenario):
         # get session
         if self._is_first_exec(package):
             return True
-        # get sip_call_id
-        #if self._is_first_invite(package):
-        #    return True
         return self._is_call_package(package)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

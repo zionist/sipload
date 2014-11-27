@@ -2,6 +2,7 @@ import logging
 
 __author__ = 'slaviann'
 
+
 class BaseMessage(object):
     def __init__(self, headers={}, body=None, ts=None):
         self.headers = headers

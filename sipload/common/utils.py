@@ -74,7 +74,6 @@ def _iter(filename):
         pcap = dpkt.pcap.Reader(f)
         if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
             for ts, buf in pcap:
-                # setattr(buf, "pcap_num", pcap_num)
                 yield buf
                 pcap_num += 1
 
@@ -102,15 +101,13 @@ def _get_packages(buf):
                 return packages
     return packages
 
+
 def get_packages_async_2(filename):
     """
     Parse packages from filename.
     :param filename:
     :return: Iterator with packages
     """
-        #else:
-        #    raise WrongFileFormatException(filename)
-
     pool = Pool(processes=cpu_count() + 2)
     num = 0
     for packages in pool.map(_get_packages, _iter(filename)):

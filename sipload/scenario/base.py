@@ -20,7 +20,6 @@ class BaseScenario(object):
 
     def add_package(self, package):
         self.packages.append(package)
-        # self.hash.update(package.gen_message)
 
     def gen_test(self):
         raise NotImplemented
@@ -112,7 +111,6 @@ class BaseScenario(object):
         for idx in range(len(sip_packages)):
             if not sip_packages[idx].compare(other_sip_packages[idx]):
                 return False
-
         return True
 
     def remove_duplicate_calls(self, calls):
@@ -141,10 +139,7 @@ class BaseScenario(object):
             if package.call_id == self.sip_call_id:
                 return True
         if type(package) == TptfMessage:
-            #if package.headers["retfunc"].endswith(self.eli_instance):
-            #    return True
             if package.get_fics_value_by_name("SESSION"):
                 if package.get_fics_value_by_name("SESSION") == self.session:
-                    # print package.num
                     return True
         return False

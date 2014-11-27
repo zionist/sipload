@@ -2,15 +2,13 @@
 import ConfigParser
 import logging
 import sys
-from optparse import OptionParser
 import resource
-import gc
-import time
-
 import os
+from optparse import OptionParser
+
 from sipload.scenario.eli_call import InbcEliScenario, MkkcMkcaEliScenario
 from sipload.scenario.sai_call import CredSaiScenario, InviteSaiScenario
-from sipload.common.utils import get_packages, get_packages_async_2
+from sipload.common.utils import get_packages
 
 
 if __name__ == '__main__':
@@ -20,9 +18,9 @@ if __name__ == '__main__':
     optp.add_option('-q', '--quiet', help='set logging to ERROR',
                     action='store_const', dest='loglevel',
                     const=logging.ERROR, default=logging.INFO)
-    #optp.add_option('-v', '--verbose', help='set logging to DEBUG',
-    #                action='store_const', dest='loglevel',
-    #                const=5, default=logging.INFO)
+    optp.add_option('-v', '--verbose', help='set logging to DEBUG',
+                    action='store_const', dest='loglevel',
+                    const=5, default=logging.INFO)
     optp.add_option('-t', '--type',
                     help='component test type "SAI" or "ELI"',
                     dest='type', default="ELI")
@@ -60,7 +58,6 @@ if __name__ == '__main__':
         optp.print_help()
         sys.exit(1)
 
-    # user_file_data = ""
     try:
         with open(opts.filename, 'r') as user_file:
             pass
@@ -71,7 +68,6 @@ if __name__ == '__main__':
 
     config = ConfigParser.ConfigParser()
     config.readfp(open(opts.conf_file))
-    # dark magic
     setattr(opts, "config", config)
 
     calls = []
@@ -112,7 +108,6 @@ if __name__ == '__main__':
         logging.info("remove duplicate packages")
         for call in calls:
             call.remove_duplicate_packages()
-        #gc.collect()
         logging.info("second run")
         logging.info("mem usage %s MB" % str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000))
         for package in get_packages_func(opts.filename):
@@ -120,7 +115,6 @@ if __name__ == '__main__':
                 if call.is_call_package(package):
                     call.add_package(package)
 
-        #gc.collect()
         logging.info("remove duplicate packages")
         for call in calls:
             call.remove_duplicate_packages()
@@ -145,6 +139,5 @@ if __name__ == '__main__':
 
     print "Total calls count is %s" % len(calls)
     logging.info("mem usage %s MB" % str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000))
-    # print resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000
 
 

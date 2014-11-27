@@ -56,7 +56,6 @@ class SipMessage(BaseMessage):
                     session = line.split()[1]
         return session
 
-
     def gen_message(self):
         """
         Generate text SIP message
