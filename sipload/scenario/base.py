@@ -48,6 +48,16 @@ class BaseScenario(object):
         def is_not_duplicate(package):
             # remove all transaction with trans num == 0
             if type(package) == TptfMessage:
+                if package.headers["transnumb"] == 0:
+                    if package.headers["tofunc"].startswith("ELI") and \
+                    package.headers["tofunc"].endswith("INBC"):
+                        if package.state == "New":
+                            return True
+                else :
+                    if package.headers["tofunc"].startswith("ELI") and \
+                            package.headers["tofunc"].endswith("INBC"):
+                        if package.state == "New":
+                            return False
                 if package.headers["transnumb"] == 0 \
                         and not package.headers["tofunc"] == "ASM?EXEC":
                     return False

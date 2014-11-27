@@ -124,25 +124,33 @@ class TptfMessage(BaseMessage):
 
     @classmethod
     def parse_header(cls, msg):
-        header_format = [
-            ["issuestamp", 4, "<i"],
-            ["compstamp", 4, "<i"],
-            ["eye", 4, "<4s"],
-            ["version", 4, "<4s"],
-            ["type", 4, "<4s"],
-            ["cc", 2, "<h"],
-            ["rsn", 2, "<h"],
-            ["prio", 2, "<h"],
-            ["class", 2, "<h"],
-            ["transnumb", 4, "<i"],
-            ["tofunc", 8, "<8s"],
-            ["retfunc", 8, "<8s"],
-            ["flags", 2, "<h"],
-            ["comptransnumb", 2, "<h"],
-            ["datalen", 4, "<i"],
-            ["udata", 8, "<8s"],
-            ]
+        #header_format = [
+        #    ["issuestamp", 4, "<i"],
+        #    ["compstamp", 4, "<i"],
+        #    ["eye", 4, "<4s"],
+        #    ["version", 4, "<4s"],
+        #    ["type", 4, "<4s"],
+        #    ["cc", 2, "<h"],
+        #    ["rsn", 2, "<h"],
+        #    ["prio", 2, "<h"],
+        #    ["class", 2, "<h"],
+        #    ["transnumb", 4, "<i"],
+        #    ["tofunc", 8, "<8s"],
+        #    ["retfunc", 8, "<8s"],
+        #    ["flags", 2, "<h"],
+        #    ["comptransnumb", 2, "<h"],
+        #    ["datalen", 4, "<i"],
+        #    ["udata", 8, "<8s"],
+        #    ]
 
+        #headers = {}
+        #header_str = msg[:64]
+        #for frm in header_format:
+        #    headers[frm[0]] = struct.unpack(frm[2], header_str[:frm[1]])[0]
+        #    header_str = header_str[frm[1]:]
+        #return headers
+
+        # parse only used headers for memory save purpose
         headers = {}
         header_str = msg[:64]
         header_str = header_str[20:]
@@ -160,34 +168,6 @@ class TptfMessage(BaseMessage):
         header_str = header_str[4:]
         headers["datalen"] = struct.unpack("<i", header_str[:4])[0]
         return headers
-        """
-        header_format = [
-            ["issuestamp", 4, "<i"],
-            ["compstamp", 4, "<i"],
-            ["eye", 4, "<4s"],
-            ["version", 4, "<4s"],
-            ["type", 4, "<4s"],
-            ["cc", 2, "<h"],
-            ["rsn", 2, "<h"],
-            ["prio", 2, "<h"],
-            ["class", 2, "<h"],
-            ["transnumb", 4, "<i"],
-            ["tofunc", 8, "<8s"],
-            ["retfunc", 8, "<8s"],
-            ["flags", 2, "<h"],
-            ["comptransnumb", 2, "<h"],
-            ["datalen", 4, "<i"],
-            ["udata", 8, "<8s"],
-            ]
-
-        headers = {}
-        header_str = msg[:64]
-        for frm in header_format:
-            headers[frm[0]] = struct.unpack(frm[2], header_str[:frm[1]])[0]
-            header_str = header_str[frm[1]:]
-        return headers
-        """
-
 
     @classmethod
     def parse(cls, msg):
@@ -197,9 +177,10 @@ class TptfMessage(BaseMessage):
         :param msg: text message
         :return: TptfMessage object
         """
+        # cut unused fices
         leave_fices = [
             "CALL_ID", "SIPSESSID", "SESSION",
-            "LI_SESSID", "SAI_SESS", "LI_SESS"
+            "LI_SESSID", "SAI_SESS", "LI_SESS", "SDPOSID"
         ]
         try:
             while msg:
@@ -214,7 +195,6 @@ class TptfMessage(BaseMessage):
                 data = msg[:headers["datalen"]]
                 while data:
                     fics = TptfFics.parse(data)
-                    # ficses.append(fics)
                     if fics.name in leave_fices:
                         ficses.append(fics)
                     data = data[fics.size():]
