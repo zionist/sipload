@@ -80,14 +80,6 @@ def _iter(filename):
 
 
 def _get_packages(buf):
-    leave_fices = [
-        "CALL_ID", "SIPSESSID", "SESSION",
-        "LI_SESSID", "SIPSESSID", "SAI_SESS"
-    ]
-    leave_headers = [
-        "transnumb", "tofunc", "flags",
-        "retfunc", "datalen", "cc", "rsn"
-    ]
     sll = dpkt.sll.SLL(buf)
     ip = sll.data
     packages = []
@@ -97,7 +89,7 @@ def _get_packages(buf):
         package_type = determine_package_type(ip.data.data)
         if package_type:
             try:
-                for package in package_type.parse(ip.data.data, leave_fices, leave_headers):
+                for package in package_type.parse(ip.data.data):
                     package.set_pcap_package(sll)
                     package.set_pcap_num(buf.pcap_num)
                     package.set_ip_dst(socket.inet_ntoa(ip.dst))

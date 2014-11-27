@@ -77,10 +77,7 @@ if __name__ == '__main__':
     calls = []
     packages_num = 0
 
-    if config.get("main", "async") == "true":
-        get_packages_func = get_packages_async_2
-    else:
-        get_packages_func = get_packages
+    get_packages_func = get_packages
 
     logging.info("first run")
     logging.info("mem usage %s MB" % str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000))
