@@ -87,15 +87,19 @@ class InbcEliScenario(BaseScenario):
         if self._is_call_package(package):
             # get ELI instance
             if package.headers["retfunc"].startswith("ELI"):
-                instance = package.headers["retfunc"][-4:]
-                if instance not in self.eli_instances:
-                    self.eli_instances.append(instance)
+                if package.headers["tofunc"].startswith("SAI"):
+                    if package.headers["tofunc"].endswith("CRED"):
+                        instance = package.headers["retfunc"][-4:]
+                        if instance not in self.eli_instances:
+                            self.eli_instances.append(instance)
             return True
         # get all transcation for instance
         for instance in self.eli_instances:
             if package.headers["retfunc"].startswith("ELI"):
-                if package.headers["retfunc"][-4:] == instance:
-                    return True
+                if package.headers["tofunc"].startswith("SAI"):
+                    if package.headers["tofunc"].endswith("CRED"):
+                        if package.headers["retfunc"][-4:] == instance:
+                            return True
         return False
 
     def remove_duplicate_packages(self):
@@ -173,15 +177,19 @@ class MkkcMkcaEliScenario(BaseScenario):
         if self._is_call_package(package):
             # get ELI instance
             if package.headers["retfunc"].startswith("ELI"):
-                instance = package.headers["retfunc"][-4:]
-                if instance not in self.eli_instances:
-                    self.eli_instances.append(instance)
+                if package.headers["tofunc"].startswith("SAI"):
+                    if package.headers["tofunc"].endswith("CRED"):
+                        instance = package.headers["retfunc"][-4:]
+                        if instance not in self.eli_instances:
+                            self.eli_instances.append(instance)
             return True
         # get all transcation for instance
         for instance in self.eli_instances:
             if package.headers["retfunc"].startswith("ELI"):
-                if package.headers["retfunc"][-4:] == instance:
-                    return True
+                if package.headers["tofunc"].startswith("SAI"):
+                    if package.headers["tofunc"].endswith("CRED"):
+                        if package.headers["retfunc"][-4:] == instance:
+                            return True
         return False
 
     def remove_duplicate_packages(self):
