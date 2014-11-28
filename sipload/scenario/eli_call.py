@@ -108,6 +108,16 @@ class InbcEliScenario(BaseScenario):
                     packages.append(package)
         self.packages = packages
 
+    @property
+    def is_broken(self):
+        """
+        Slug
+        """
+        for package in self.packages:
+            if package.headers["tofunc"].endswith("HAUP"):
+                return False
+        return True
+
 
 class MkkcMkcaEliScenario(BaseScenario):
     def __init__(self, opts, start_package):
@@ -184,5 +194,14 @@ class MkkcMkcaEliScenario(BaseScenario):
                     packages.append(package)
         self.packages = packages
 
+    @property
+    def is_broken(self):
+        """
+        Slug
+        """
+        for package in self.packages:
+            if package.headers["tofunc"].endswith("HAUP"):
+                return False
+        return True
 
 

@@ -25,6 +25,10 @@ class BaseScenario(object):
         raise NotImplemented
 
     def _sort(self):
+        """
+        Sort packages according num
+        :return:
+        """
         self.packages = sorted(self.packages, key=lambda key: key.num)
 
     def save_pcap(self):
@@ -100,9 +104,16 @@ class BaseScenario(object):
         other_tptf_packages = filter(is_tptf, other.packages)
         if len(tptf_packages) != len(other_tptf_packages):
             return False
-        for idx in range(len(tptf_packages)):
-            if not tptf_packages[idx].compare(other_tptf_packages[idx]):
-                return False
+
+        tptf_match_count = 0
+        for package in tptf_packages:
+            for other_package in other_tptf_packages:
+                if package.compare(other_package):
+                    tptf_match_count += 1
+                    break
+
+        if not tptf_match_count == len(tptf_packages):
+            return False
 
         sip_packages = filter(is_sip, self.packages)
         other_sip_packages = filter(is_sip, other.packages)
@@ -143,3 +154,11 @@ class BaseScenario(object):
                 if package.get_fics_value_by_name("SESSION") == self.session:
                     return True
         return False
+
+    @property
+    def is_broken(self):
+        """
+        Must be implemented in child classes
+        :return:
+        """
+        raise NotImplemented

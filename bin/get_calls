@@ -134,10 +134,14 @@ if __name__ == '__main__':
     for call in calls:
         call.remove_duplicate_calls(calls)
 
+    broken_calls = 0
     for call in calls:
-       call.save_pcap()
+        if not call.is_broken:
+            call.save_pcap()
+        else:
+            broken_calls += 1
 
-    print "Total calls count is %s" % len(calls)
+    print "Total calls count is %s" % str(len(calls) - broken_calls)
     logging.info("mem usage %s MB" % str(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1000))
 
 

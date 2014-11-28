@@ -85,6 +85,13 @@ class CredSaiScenario(BaseScenario):
         #    return True
         return self._is_call_package(package)
 
+    @property
+    def is_broken(self):
+        """
+        Slug
+        """
+        return False
+
 
 class InviteSaiScenario(BaseScenario):
     def __init__(self, opts, start_package):
@@ -134,3 +141,9 @@ class InviteSaiScenario(BaseScenario):
             return True
         return self._is_call_package(package)
 
+    @property
+    def is_broken(self):
+        """
+        Slug
+        """
+        return False
