@@ -29,7 +29,7 @@ class BaseScenario(object):
         Sort packages according num
         :return:
         """
-        self.packages = sorted(self.packages, key=lambda key: key.num)
+        self.packages = sorted(self.packages, key=lambda key: key.ts)
 
     def save_pcap(self):
         """
